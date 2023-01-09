@@ -86,7 +86,8 @@ public class MainTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .1, .1, .1, .1, 0);
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .5, .1, .5, .1, 0
+        );
 
         double s1pos = 0;
         SlideController = new PIDController(pS,iS,dS);
@@ -152,6 +153,7 @@ public class MainTeleOp extends LinearOpMode {
             }
 
 
+            servo.periodic();
 
             SlideController.setPID(pS, iS , dS);
             int arm_pos_Left = arm_motor_Left.getCurrentPosition();

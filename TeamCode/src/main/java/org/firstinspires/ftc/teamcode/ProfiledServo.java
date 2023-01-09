@@ -74,9 +74,9 @@ public class ProfiledServo implements Subsystem {
         previousEndPosition = endPosition;
         double current_target = profile_m.get(timer.seconds()).getX();
         setPositionsSynced(current_target);
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        telemetry.addData("current target", current_target);
-        telemetry.update();
+     //   telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+       // telemetry.addData("current target", current_target);
+      //  telemetry.update();
     }
 
     public boolean isBusy() {

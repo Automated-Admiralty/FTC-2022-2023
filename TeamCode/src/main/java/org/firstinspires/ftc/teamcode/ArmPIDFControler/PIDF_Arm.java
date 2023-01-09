@@ -46,7 +46,7 @@ public class PIDF_Arm extends OpMode{
         double ff = Math.cos(Math.toRadians(target/ ticks_in_degree)) * f;
 
         double powerLeft = pidLeft + ff;
-        double powerRight = pidLeft + ff;
+        double powerRight = pidRight + ff;
 
         arm_motor_Right.setPower(powerRight);
         arm_motor_Left.setPower(powerLeft);
