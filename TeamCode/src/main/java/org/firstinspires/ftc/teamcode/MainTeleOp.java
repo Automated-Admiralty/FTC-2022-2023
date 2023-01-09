@@ -44,6 +44,7 @@ import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
  * This sample utilizes the SampleMecanumDriveCancelable.java and TrajectorySequenceRunnerCancelable.java
  * classes. Please ensure that these files are copied into your own project.
  */
+
 @TeleOp
 public class MainTeleOp extends LinearOpMode {
     // Define 2 states, drive control or automatic control
@@ -51,6 +52,7 @@ public class MainTeleOp extends LinearOpMode {
         DRIVER_CONTROL,
         AUTOMATIC_CONTROL
     }
+    private ProfiledServo servo;
     //Slide PIDF
     private PIDController SlideController;
 
@@ -84,7 +86,7 @@ public class MainTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
-        ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .1, .1, .1, .1, 0);
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .1, .1, .1, .1, 0);
 
         double s1pos = 0;
         SlideController = new PIDController(pS,iS,dS);
@@ -156,7 +158,7 @@ public class MainTeleOp extends LinearOpMode {
             int arm_pos_Right = arm_motor_Right.getCurrentPosition();
             double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
             double pidRight = SlideController.calculate(arm_pos_Right, targetS);
-            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS;
+            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
             double powerLeft = pidLeft + ff;
             double powerRight = pidRight + ff;
