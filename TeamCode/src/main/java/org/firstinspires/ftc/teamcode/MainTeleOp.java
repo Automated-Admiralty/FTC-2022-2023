@@ -56,11 +56,11 @@ public class MainTeleOp extends LinearOpMode {
     //Slide PIDF
     private PIDController SlideController;
 
-    public static double pS = 0, iS = 0, dS = 0;
-    public static double fS = 0;
+    public static double pS = .006, iS = 0, dS = 0.0001;
+    public static double fS = .01;
 
 
-    public static int targetS = 500;
+    public static int targetS = 0;
 
 
 
@@ -86,19 +86,15 @@ public class MainTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .5, .1, .5, .1, 0
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .1, .3, .1, 0
         );
 
         double s1pos = 0;
         SlideController = new PIDController(pS,iS,dS);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-
+        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
-        arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        arm_motor_Right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         // Initialize custom cancelable SampleMecanumDrive class
@@ -134,9 +130,9 @@ public class MainTeleOp extends LinearOpMode {
 
 
             if(gamepad2.left_bumper ){
-                s1pos = 0.58;
+                s1pos = 0.5;
             }else if(gamepad2.right_bumper){
-                s1pos = 0.1;
+                s1pos = 0.45;
             }else if (gamepad2.a){
                 s1pos += 0.01;
             }else if (gamepad2.b){
@@ -156,14 +152,14 @@ public class MainTeleOp extends LinearOpMode {
             servo.periodic();
 
             SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = arm_motor_Left.getCurrentPosition();
-            int arm_pos_Right = arm_motor_Right.getCurrentPosition();
+            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
+            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
             double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-            double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+           // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
             double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
             double powerLeft = pidLeft + ff;
-            double powerRight = pidRight + ff;
+            double powerRight = pidLeft + ff;
 
             arm_motor_Right.setPower(powerRight);
             arm_motor_Left.setPower(powerLeft);

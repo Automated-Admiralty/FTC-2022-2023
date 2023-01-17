@@ -33,20 +33,21 @@ public class PIDF_Arm extends OpMode{
 
         arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
+        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
     public void loop() {
         controller.setPID(p, i , d);
-       int arm_pos_Left = arm_motor_Left.getCurrentPosition();
-        int arm_pos_Right = arm_motor_Right.getCurrentPosition();
+        int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
+        int arm_pos_Right =-(arm_motor_Right.getCurrentPosition());
         double pidLeft = controller.calculate(arm_pos_Left, target);
-        double pidRight = controller.calculate(arm_pos_Right, target);
+       // double pidRight = controller.calculate(arm_pos_Right, target);
         double ff = Math.cos(Math.toRadians(target/ ticks_in_degree)) * f;
 
         double powerLeft = pidLeft + ff;
-        double powerRight = pidRight + ff;
+        double powerRight = pidLeft + ff;
 
         arm_motor_Right.setPower(powerRight);
         arm_motor_Left.setPower(powerLeft);
