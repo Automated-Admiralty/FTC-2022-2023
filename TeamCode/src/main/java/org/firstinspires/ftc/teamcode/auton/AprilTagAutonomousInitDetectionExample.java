@@ -181,12 +181,22 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                     .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(170)))
+                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
 
         }else if(tagOfInterest.id == LEFT){
-            //left trajectory
+            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+
+            drive.setPoseEstimate(startPose);
+
+            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
+                    .build();
+            drive.followTrajectorySequence(trajSeq);
         }else if(tagOfInterest.id == MIDDLE){
             //middle trajectory
         }else{

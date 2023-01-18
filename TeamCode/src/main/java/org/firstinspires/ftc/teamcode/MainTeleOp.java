@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDriveCancelable;
 
@@ -86,10 +87,12 @@ public class MainTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .1, .3, .1, 0
-        );
-
         double s1pos = 0;
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos
+        );
+        Servo Claw = hardwareMap.get(Servo.class, "claw");
+
+
         SlideController = new PIDController(pS,iS,dS);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -129,23 +132,32 @@ public class MainTeleOp extends LinearOpMode {
 
 
 
-            if(gamepad2.left_bumper ){
+            if(gamepad2.y ){
+                s1pos = 0;
+            }else if(gamepad2.a){
+                s1pos = 1;
+            }       if(gamepad2.b ){
                 s1pos = 0.5;
-            }else if(gamepad2.right_bumper){
-                s1pos = 0.45;
-            }else if (gamepad2.a){
-                s1pos += 0.01;
-            }else if (gamepad2.b){
-                s1pos -=0.01;
+            }else if(gamepad2.x){
+                s1pos = 0.3;
+            }
 
+            if(gamepad2.left_bumper ){
+                Claw.setPosition(0);
+            }else if(gamepad2.right_bumper){
+                 Claw.setPosition(0.5);
             }
 
             servo.setPosition(s1pos);
 
-            if(gamepad1.a && targetS <= 4000){
+            if(gamepad2.dpad_up && targetS <= 4000){
                 targetS = 4000;
-            }else if(gamepad1.b && targetS >= 0){
+            }else if(gamepad2.dpad_down && targetS >= 0){
                 targetS = 0;
+            }else if(gamepad2.dpad_left && targetS != 3000){
+                targetS = 3000;
+            }else if(gamepad2.dpad_right && targetS != 1000){
+                targetS = 1000;
             }
 
 

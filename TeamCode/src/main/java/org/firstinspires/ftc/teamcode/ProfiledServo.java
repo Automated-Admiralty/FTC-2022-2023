@@ -28,6 +28,8 @@ public class ProfiledServo implements Subsystem {
     public ProfiledServo(HardwareMap hwmap, String name1, String name2, double Forwardvelo, double Forwardaccel, double BackwardVelo, double BackwardAccel, double initialPosition) {
         servo_left = hwmap.get(Servo.class, name1);
         servo_right = hwmap.get(Servo.class,name2);
+        servo_left.setDirection(Servo.Direction.REVERSE);
+        servo_right.setDirection(Servo.Direction.REVERSE);
         this.name = name1 + " " + name2 + " ";
         this.endPosition = initialPosition;
         this.currentPosition = initialPosition;
