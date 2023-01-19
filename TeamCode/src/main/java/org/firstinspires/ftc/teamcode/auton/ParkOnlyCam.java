@@ -22,7 +22,6 @@
 package org.firstinspires.ftc.teamcode.auton;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -34,12 +33,11 @@ import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
 
 import java.util.ArrayList;
 
 @TeleOp
-public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
+public class ParkOnlyCam extends LinearOpMode
 {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -186,7 +184,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             drive.followTrajectorySequence(trajSeq);
 
         }else if(tagOfInterest.id == LEFT){
-            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+           /* SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
 
@@ -197,10 +195,36 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
                     .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
+
+            */
+            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+            drive.setPoseEstimate(startPose);
+            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(10,-35, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(trajSeq);
         }else if(tagOfInterest.id == MIDDLE){
-            //middle trajectory
+            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+            drive.setPoseEstimate(startPose);
+            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(trajSeq);
         }else{
-            //right trajectory
+            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+            drive.setPoseEstimate(startPose);
+            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(60,-35, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(trajSeq);
         }
 
 
