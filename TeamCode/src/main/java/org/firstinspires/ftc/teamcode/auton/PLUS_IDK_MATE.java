@@ -91,6 +91,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         SlideController = new PIDController(pS,iS,dS);
         //Claw
         Servo Claw = hardwareMap.get(Servo.class, "claw");
+        Claw.setPosition(0);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -99,6 +100,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         // servo arm setup
         ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0
         );
+
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
@@ -127,7 +129,6 @@ public class PLUS_IDK_MATE extends LinearOpMode
             public void onOpened()
             {
                 camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
-                Claw.setPosition(0);
             }
 
             @Override
@@ -206,6 +207,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
          * The START command just came in: now work off the latest snapshot acquired
          * during the init loop.
          */
+
+
 
         /* Update the telemetry */
         if(tagOfInterest != null)
