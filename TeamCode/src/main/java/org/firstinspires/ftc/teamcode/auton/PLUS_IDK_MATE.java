@@ -27,6 +27,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -47,7 +48,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
     static final double FEET_PER_METER = 3.28084;
-    private PIDController SlideController;
+
     // Lens intrinsics
     // UNITS ARE PIXELS
     // NOTE: this calibration is for the C920 webcam at 800x448.
@@ -56,6 +57,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
+    private PIDController SlideController;
+
     public static double pS = .006, iS = 0, dS = 0.0001;
     public static double fS = .01;
 
@@ -80,9 +83,38 @@ public class PLUS_IDK_MATE extends LinearOpMode
     public void runOpMode()
 
     {
+        //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
+        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
+        SlideController = new PIDController(pS,iS,dS);
+        //Claw
         Servo Claw = hardwareMap.get(Servo.class, "claw");
+        //traj setup
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+        drive.setPoseEstimate(startPose);
+        // servo arm setup
+        ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0
+        );
+        //Traj Sequence Scoring
+        TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
+                .addDisplacementMarker(() -> {
+                    servo.setPosition(0);
+                    Claw.setPosition(1);
+                })
+
+                .build();
+        // traj sequence park left
+
+        //traj sequence park Right
+
+        // traj sequence park center
+
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
@@ -190,59 +222,20 @@ public class PLUS_IDK_MATE extends LinearOpMode
 
         /* Actually do something useful */
         if(tagOfInterest == null){
-            ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0);
-            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
 
-            drive.setPoseEstimate(startPose);
-
-            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
-                    .build();
             drive.followTrajectorySequence(trajSeq);
 
         }else if(tagOfInterest.id == LEFT){
-            ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0
-            );
-            servo.periodic();
-            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
-                    .addDisplacementMarker(() -> {
-                        servo.setPosition(0);
-                        Claw.setPosition(1);
-                    })
 
-                    .build();
+            servo.periodic();
+
+
             drive.followTrajectorySequence(trajSeq);
         }else if(tagOfInterest.id == MIDDLE){
-            ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0);
 
-                    SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
-                    .build();
             drive.followTrajectorySequence(trajSeq);
         }else{
-            ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0);
-            SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
-                    .build();
+
             drive.followTrajectorySequence(trajSeq);
         }
 
