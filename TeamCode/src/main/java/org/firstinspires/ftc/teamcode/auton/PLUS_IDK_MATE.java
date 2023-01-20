@@ -211,6 +211,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
 
 
         /* Update the telemetry */
+
         if(tagOfInterest != null)
         {
             telemetry.addLine("Tag snapshot:\n");
@@ -224,24 +225,41 @@ public class PLUS_IDK_MATE extends LinearOpMode
         }
 
         /* Actually do something useful */
-        if(tagOfInterest == null){
+        drive.followTrajectorySequenceAsync(trajSeq);
+        while(opModeIsActive()) {
+            SlideController.setPID(pS, iS , dS);
+            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
+            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
+            double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
+            // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
-            drive.followTrajectorySequence(trajSeq);
+            double powerLeft = pidLeft + ff;
+            double powerRight = pidLeft + ff;
 
-        }else if(tagOfInterest.id == LEFT){
+            arm_motor_Right.setPower(powerRight);
+            arm_motor_Left.setPower(powerLeft);
 
             servo.periodic();
 
+            if (tagOfInterest == null) {
 
-            drive.followTrajectorySequence(trajSeq);
-        }else if(tagOfInterest.id == MIDDLE){
+                drive.update();
 
-            drive.followTrajectorySequence(trajSeq);
-        }else{
+            } else if (tagOfInterest.id == LEFT) {
 
-            drive.followTrajectorySequence(trajSeq);
+                drive.update();
+
+
+                drive.followTrajectorySequence(trajSeq);
+            } else if (tagOfInterest.id == MIDDLE) {
+
+                drive.update();
+            } else {
+
+                drive.update();
+            }
         }
-
 
         /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
         while (opModeIsActive()) {sleep(20);}
