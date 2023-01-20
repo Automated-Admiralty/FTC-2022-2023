@@ -245,19 +245,22 @@ public class PLUS_IDK_MATE extends LinearOpMode
             if (tagOfInterest == null) {
 
                 drive.update();
+                drive.followTrajectorySequence(park3);
 
             } else if (tagOfInterest.id == LEFT) {
 
                 drive.update();
-
+                drive.followTrajectorySequence(park1);
 
                 drive.followTrajectorySequence(trajSeq);
             } else if (tagOfInterest.id == MIDDLE) {
 
                 drive.update();
+                drive.followTrajectorySequence(park2);
             } else {
 
                 drive.update();
+                drive.followTrajectorySequence(park3);
             }
         }
 
