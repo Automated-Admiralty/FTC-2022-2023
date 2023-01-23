@@ -88,8 +88,7 @@ public class MainTeleOp extends LinearOpMode {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
         double s1pos = 0;
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos
-        );
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos);
         Servo Claw = hardwareMap.get(Servo.class, "claw");
 
 
