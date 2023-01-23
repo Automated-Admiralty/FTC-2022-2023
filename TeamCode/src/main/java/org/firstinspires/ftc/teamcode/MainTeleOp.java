@@ -88,14 +88,10 @@ public class MainTeleOp extends LinearOpMode {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
         double s1pos = 0;
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", 1, 1, 1, 1, s1pos+.02
-        );
+        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos);
         Servo Claw = hardwareMap.get(Servo.class, "claw");
 
-       Servo servo_left = hardwareMap.get(Servo.class, "ArmLeftServo");
-        Servo servo_right = hardwareMap.get(Servo.class,"ArmRightServo");
-        servo_left.setDirection(Servo.Direction.REVERSE);
-        servo_right.setDirection(Servo.Direction.REVERSE);
+
         SlideController = new PIDController(pS,iS,dS);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -136,10 +132,9 @@ public class MainTeleOp extends LinearOpMode {
 
 
             if(gamepad2.y ){
-                servo_left.setPosition(1);
-                servo_right.setPosition(0);
+                s1pos = 0;
             }else if(gamepad2.a){
-                s1pos = .95;
+                s1pos = 1;
             }       if(gamepad2.b ){
                 s1pos = 0.5;
             }else if(gamepad2.x){
@@ -149,7 +144,7 @@ public class MainTeleOp extends LinearOpMode {
             if(gamepad2.left_bumper ){
                 Claw.setPosition(0);
             }else if(gamepad2.right_bumper){
-                 Claw.setPosition(1);
+                 Claw.setPosition(0.5);
             }
 
             servo.setPosition(s1pos);
