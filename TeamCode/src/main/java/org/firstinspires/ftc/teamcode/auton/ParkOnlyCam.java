@@ -26,6 +26,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -70,7 +71,8 @@ public class ParkOnlyCam extends LinearOpMode
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-
+        Servo Claw = hardwareMap.get(Servo.class, "claw");
+        Claw.setPosition(0);
         camera.setPipeline(aprilTagDetectionPipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
@@ -110,6 +112,7 @@ public class ParkOnlyCam extends LinearOpMode
                         break;
                     }
                 }
+
 
                 if(tagFound)
                 {
@@ -179,8 +182,8 @@ public class ParkOnlyCam extends LinearOpMode
             drive.setPoseEstimate(startPose);
 
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
+                    .lineToLinearHeading(new Pose2d(34,-5, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(46,-5, Math.toRadians(150)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
 
@@ -203,8 +206,8 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(10,-35, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-34, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(-10,-34, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }else if(tagOfInterest.id == MIDDLE){
@@ -213,7 +216,7 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }else{
@@ -222,8 +225,8 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-35, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(60,-35, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(90,-33, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }
