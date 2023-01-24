@@ -144,7 +144,7 @@ public class MainTeleOp extends LinearOpMode {
             if(gamepad2.left_bumper ){
                 Claw.setPosition(0);
             }else if(gamepad2.right_bumper){
-                 Claw.setPosition(0.5);
+                 Claw.setPosition(0.3);
             }
 
             servo.setPosition(s1pos);
@@ -158,7 +158,11 @@ public class MainTeleOp extends LinearOpMode {
             }else if(gamepad2.dpad_right && targetS != 1000){
                 targetS = 1000;
             }
-
+            if(gamepad1.dpad_up && targetS != 4000){
+                targetS = 4000;
+            }else if(gamepad1.dpad_down && targetS != 0){
+                targetS = 0;
+            }
 
             servo.periodic();
 
