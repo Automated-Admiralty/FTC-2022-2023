@@ -91,7 +91,10 @@ public class MainTeleOp extends LinearOpMode {
         servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos);
         Servo Claw = hardwareMap.get(Servo.class, "claw");
 
-
+        arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         SlideController = new PIDController(pS,iS,dS);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 

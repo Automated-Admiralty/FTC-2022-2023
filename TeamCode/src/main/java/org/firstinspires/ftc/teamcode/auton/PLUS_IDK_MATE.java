@@ -86,6 +86,10 @@ public class PLUS_IDK_MATE extends LinearOpMode
         //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
+        arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
         SlideController = new PIDController(pS,iS,dS);
@@ -227,18 +231,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         /* Actually do something useful */
         drive.followTrajectorySequenceAsync(trajSeq);
         while(opModeIsActive()) {
-            SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
-            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
-            double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-            // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
-            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
-            double powerLeft = pidLeft + ff;
-            double powerRight = pidLeft + ff;
-
-            arm_motor_Right.setPower(powerRight);
-            arm_motor_Left.setPower(powerLeft);
 
             servo.periodic();
 
@@ -259,10 +252,41 @@ public class PLUS_IDK_MATE extends LinearOpMode
               //  drive.followTrajectorySequence(park2);
             } else {
 
+            }
+
                 drive.update();
              //   drive.followTrajectorySequence(park3);
-            }
+                SlideController.setPID(pS, iS , dS);
+                int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
+                int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
+                double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
+                // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+                double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
+
+                double powerLeft = pidLeft + ff;
+                double powerRight = pidLeft + ff;
+
+                arm_motor_Right.setPower(powerRight);
+                arm_motor_Left.setPower(powerLeft);
+                double servotarget = servo.getTarget();
+                telemetry.addData("posLeft", arm_pos_Left);
+                telemetry.addData("posRight", arm_pos_Right);
+                telemetry.addData("target", targetS);
+                telemetry.addData("powerleft", powerLeft);
+                telemetry.addData("powerRight", powerRight);
+                // telemetry.update();
+                telemetry.addData("servo target", servotarget);
+
+
+
+                // Print pose to telemetry
+                telemetry.addData("Left Slide Postion", arm_motor_Left.getCurrentPosition());
+                telemetry.addData("Right Slide Postion", arm_motor_Right.getCurrentPosition());
+
+                telemetry.update();
+
         }
+
 
         /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
         while (opModeIsActive()) {sleep(20);}
