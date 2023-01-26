@@ -29,7 +29,7 @@ public class ProfiledServo implements Subsystem {
         servo_left = hwmap.get(Servo.class, name1);
         servo_right = hwmap.get(Servo.class,name2);
     servo_left.setDirection(Servo.Direction.FORWARD);
-        servo_right.setDirection(Servo.Direction.FORWARD);
+        servo_right.setDirection(Servo.Direction.REVERSE);
         this.name = name1 + " " + name2 + " ";
         this.endPosition = initialPosition;
         this.currentPosition = initialPosition;
@@ -71,6 +71,7 @@ public class ProfiledServo implements Subsystem {
     @Override
     public void periodic() {
         if (endPosition != previousEndPosition) {
+
             regenerate_profile();
         }
         previousEndPosition = endPosition;

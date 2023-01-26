@@ -69,8 +69,8 @@ public class JOE_V1 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
         Servo ArmLeftServo = hardwareMap.servo.get("ArmLeftServo");
-        CRServo suckFront = hardwareMap.crservo.get("suckFront");
-        CRServo suckBack = hardwareMap.crservo.get("suckBack");
+       // CRServo suckFront = hardwareMap.crservo.get("suckFront");
+        //CRServo suckBack = hardwareMap.crservo.get("suckBack");
         DcMotor LeftSlide = hardwareMap.dcMotor.get("left slide");
         DcMotor RightSlide = hardwareMap.dcMotor.get("Right slide");
         LeftSlide.setDirection(DcMotor.Direction.REVERSE);
@@ -81,8 +81,8 @@ public class JOE_V1 extends LinearOpMode {
         RightSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LeftSlide.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
         RightSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Servo Gripper = hardwareMap.servo.get("Gripper");
-        ArmRightServo.setDirection(Servo.Direction.REVERSE);
+        Servo Gripper = hardwareMap.servo.get("claw");
+        ArmRightServo.setDirection(Servo.Direction.FORWARD);
         ArmLeftServo.setDirection(Servo.Direction.FORWARD);
         // Initialize custom cancelable SampleMecanumDrive class
         // Ensure that the contents are copied over from https://github.com/NoahBres/road-runner-quickstart/blob/advanced-examples/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/drive/advanced/SampleMecanumDriveCancelable.java
@@ -131,10 +131,10 @@ public class JOE_V1 extends LinearOpMode {
             ArmRightServo.setPosition(s1pos);
             if(gamepad2.left_bumper ){
                 s1pos =0.58;
-                s2pos = 0.42;
+                s2pos = 0.58;
             }else if(gamepad2.right_bumper){
                 s1pos= 0.1;
-                s2pos = 0.9;
+                s2pos = 0.1;
             }else if (gamepad2.a){
                 s1pos += 0.01;
                 s2pos += 0.01;

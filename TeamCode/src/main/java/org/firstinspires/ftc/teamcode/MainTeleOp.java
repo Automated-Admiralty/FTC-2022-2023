@@ -168,7 +168,7 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             servo.periodic();
-
+/*
             SlideController.setPID(pS, iS , dS);
             int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
             int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
@@ -181,6 +181,8 @@ public class MainTeleOp extends LinearOpMode {
 
             arm_motor_Right.setPower(powerRight);
             arm_motor_Left.setPower(powerLeft);
+
+
             double servotarget = servo.getTarget();
             telemetry.addData("posLeft", arm_pos_Left);
             telemetry.addData("posRight", arm_pos_Right);
@@ -200,6 +202,7 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
             telemetry.update();
+*/
 
             // We follow different logic based on whether we are in manual driver control or switch
             // control to the automatic mode
