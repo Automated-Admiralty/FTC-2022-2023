@@ -105,8 +105,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
 
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(46,-7.5, Math.toRadians(175)))
+                .lineToLinearHeading(new Pose2d(34,-10, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(46,-10.5, Math.toRadians(167)))
                 .addDisplacementMarker(() -> {
 
                     Claw.setPosition(1);
@@ -287,7 +287,51 @@ public class PLUS_IDK_MATE extends LinearOpMode
                 telemetry.update();
 
         }
+        if(tagOfInterest == null){
 
+            drive.followTrajectorySequence(trajSeq);
+
+        }else if(tagOfInterest.id == LEFT){
+           /* SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+
+            drive.setPoseEstimate(startPose);
+
+            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
+                    .build();
+            drive.followTrajectorySequence(trajSeq);
+
+            */
+
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            drive.setPoseEstimate(startPosePost);
+            TrajectorySequence ParkLeft = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-34, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(-10,-34, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(ParkLeft);
+        }else if(tagOfInterest.id == MIDDLE){
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            drive.setPoseEstimate(startPosePost);
+            TrajectorySequence ParkMid = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(ParkMid);
+        }else{
+            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            drive.setPoseEstimate(startPosePost);
+            TrajectorySequence ParkRight = drive.trajectorySequenceBuilder(startPose)
+                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(90,-33, Math.toRadians(270)))
+                    .build();
+            drive.followTrajectorySequence(ParkRight);
+        }
 
         /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
         while (opModeIsActive()) {sleep(20);}
