@@ -82,8 +82,8 @@ public class JOE_V1 extends LinearOpMode {
         LeftSlide.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
         RightSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Servo Gripper = hardwareMap.servo.get("claw");
-        ArmRightServo.setDirection(Servo.Direction.FORWARD);
-        ArmLeftServo.setDirection(Servo.Direction.FORWARD);
+        ArmRightServo.setDirection(Servo.Direction.REVERSE);
+        ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         // Initialize custom cancelable SampleMecanumDrive class
         // Ensure that the contents are copied over from https://github.com/NoahBres/road-runner-quickstart/blob/advanced-examples/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/drive/advanced/SampleMecanumDriveCancelable.java
         // and https://github.com/NoahBres/road-runner-quickstart/blob/advanced-examples/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/drive/advanced/TrajectorySequenceRunnerCancelable.java
@@ -130,26 +130,32 @@ public class JOE_V1 extends LinearOpMode {
             ArmLeftServo.setPosition(s2pos);
             ArmRightServo.setPosition(s1pos);
             if(gamepad2.left_bumper ){
-                s1pos =0.58;
-                s2pos = 0.58;
+                s1pos =0.77;
+                s2pos = 0.77;
             }else if(gamepad2.right_bumper){
-                s1pos= 0.1;
-                s2pos = 0.1;
-            }else if (gamepad2.a){
-                s1pos += 0.01;
-                s2pos += 0.01;
-            }else if (gamepad2.b){
-                s1pos -=0.01;
-                s2pos -=0.01    ;
-            }
+                s1pos= 0.00;
+                s2pos = 0.00;
+            }else if (gamepad2.dpad_down){
+                s1pos += 0.013;
+                s2pos += 0.013;
+            }else if (gamepad2.dpad_up){
+                s1pos -=0.013;
+                s2pos -=0.013;
+            }else if(gamepad2.dpad_right){
+            s1pos= 0.48;
+            s2pos = 0.48;
+        } else if(gamepad2.dpad_left){
+            s1pos= 0.35;
+            s2pos = 0.35;
+        }
 
 //lbTriggred = gamepad2.left_bumper;
 //rbTriggerd = gamepad2.right_bumper;
 
-            if(gamepad2.y){
+            if(gamepad2.a){
                 GripPos = 0.3;
             }
-            if(gamepad2.x){
+            if(gamepad2.b){
                 GripPos = 0;
             }
             Gripper.setPosition(GripPos);
