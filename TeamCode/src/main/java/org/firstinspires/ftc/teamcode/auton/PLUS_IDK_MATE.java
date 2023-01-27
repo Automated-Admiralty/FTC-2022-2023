@@ -85,32 +85,30 @@ public class PLUS_IDK_MATE extends LinearOpMode
     {
         //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
-        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
-        arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
+            arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
         SlideController = new PIDController(pS,iS,dS);
         //Claw
         Servo Claw = hardwareMap.get(Servo.class, "claw");
-        Claw.setPosition(0);
+        Claw.setPosition(0.3);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
-        ProfiledServo servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, 0
-        );
 
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
+                .lineToLinearHeading(new Pose2d(46,-7.5, Math.toRadians(175)))
                 .addDisplacementMarker(() -> {
-                    servo.setPosition(0);
+
                     Claw.setPosition(1);
                 })
 
@@ -229,13 +227,14 @@ public class PLUS_IDK_MATE extends LinearOpMode
         }
 
         /* Actually do something useful */
-        drive.followTrajectorySequenceAsync(trajSeq);
+        drive.followTrajectorySequence(trajSeq);
+       // drive.update();
         while(opModeIsActive()) {
 
 
-            servo.periodic();
 
-            if (tagOfInterest == null) {
+
+           /* if (tagOfInterest == null) {
 
                 drive.update();
                 //drive.followTrajectorySequence(park3);
@@ -253,29 +252,31 @@ public class PLUS_IDK_MATE extends LinearOpMode
             } else {
 
             }
-
-                drive.update();
-             //   drive.followTrajectorySequence(park3);
+*/
+           // targetS = 3000;
+            //sleep(2000);
+          //drive.update();
+             //drive.followTrajectorySequence(park3);
                 SlideController.setPID(pS, iS , dS);
                 int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
                 int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
                 double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-                // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+                double pidRight = SlideController.calculate(arm_pos_Right, targetS);
                 double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
                 double powerLeft = pidLeft + ff;
                 double powerRight = pidLeft + ff;
 
-                arm_motor_Right.setPower(powerRight);
-                arm_motor_Left.setPower(powerLeft);
-                double servotarget = servo.getTarget();
+                //arm_motor_Right.setPower(powerRight);
+                //arm_motor_Left.setPower(powerLeft);
+             //   double servotarget = servo.getTarget();
                 telemetry.addData("posLeft", arm_pos_Left);
                 telemetry.addData("posRight", arm_pos_Right);
                 telemetry.addData("target", targetS);
                 telemetry.addData("powerleft", powerLeft);
                 telemetry.addData("powerRight", powerRight);
                 // telemetry.update();
-                telemetry.addData("servo target", servotarget);
+               // telemetry.addData("servo target", servotarget);
 
 
 
