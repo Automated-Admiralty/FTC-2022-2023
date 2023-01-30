@@ -86,7 +86,7 @@ public class MainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
-        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "right slide");
+        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
         double s1pos = 0;
         servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos);
         Servo Claw = hardwareMap.get(Servo.class, "claw");
@@ -98,8 +98,8 @@ public class MainTeleOp extends LinearOpMode {
         SlideController = new PIDController(pS,iS,dS);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
         // Initialize custom cancelable SampleMecanumDrive class
@@ -168,19 +168,19 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             servo.periodic();
-/*
+
             SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
-            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
+            int arm_pos_Left = (arm_motor_Left.getCurrentPosition());
+            int arm_pos_Right = (arm_motor_Right.getCurrentPosition());
             double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-           // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+            double pidRight = SlideController.calculate(arm_pos_Right, targetS);
             double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
             double powerLeft = pidLeft + ff;
-            double powerRight = pidLeft + ff;
+            double powerRight = pidRight + ff;
 
-            arm_motor_Right.setPower(powerRight);
-            arm_motor_Left.setPower(powerLeft);
+            arm_motor_Right.setPower(-powerRight);
+            arm_motor_Left.setPower(-powerLeft);
 
 
             double servotarget = servo.getTarget();
@@ -202,7 +202,8 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
             telemetry.update();
-*/
+
+
 
             // We follow different logic based on whether we are in manual driver control or switch
             // control to the automatic mode

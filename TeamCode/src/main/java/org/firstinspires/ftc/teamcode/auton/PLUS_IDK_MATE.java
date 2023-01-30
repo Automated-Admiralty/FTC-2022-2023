@@ -254,8 +254,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
 
             }
 */
-           targetS = 3000;
-            sleep(2000);
+           targetS = 4000;
+
           //drive.update();
              //drive.followTrajectorySequence(park3);
              //   SlideController.setPID(pS, iS , dS);
