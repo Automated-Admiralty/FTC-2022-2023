@@ -72,7 +72,7 @@ public class ParkOnlyCam extends LinearOpMode
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
         Servo Claw = hardwareMap.get(Servo.class, "claw");
-        Claw.setPosition(0);
+        Claw.setPosition(0.3);
         camera.setPipeline(aprilTagDetectionPipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
@@ -206,8 +206,8 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-34, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(-10,-34, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-36, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(-3.9,-36, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }else if(tagOfInterest.id == MIDDLE){
@@ -216,7 +216,7 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-36, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }else{
@@ -225,8 +225,8 @@ public class ParkOnlyCam extends LinearOpMode
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(90,-33, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(35,-36, Math.toRadians(270)))
+                    .lineToLinearHeading(new Pose2d(70,-36, Math.toRadians(270)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
         }
