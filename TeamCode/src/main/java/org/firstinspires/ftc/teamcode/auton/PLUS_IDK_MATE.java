@@ -69,6 +69,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
 
     public final double ticks_in_degreeS = 567.7/180;
 
+
+
     // UNITS ARE METERS
     double tagsize = 0.166;
 
@@ -86,14 +88,9 @@ public class PLUS_IDK_MATE extends LinearOpMode
         //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
-            arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        SlideController = new PIDController(pS,iS,dS);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
-        SlideController = new PIDController(pS,iS,dS);
-        SlideController.setPID(pS,iS,dS);
         //Claw
         Servo Claw = hardwareMap.get(Servo.class, "claw");
         Claw.setPosition(0.3);
@@ -103,14 +100,23 @@ public class PLUS_IDK_MATE extends LinearOpMode
         Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
-
+        Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
+        Servo ArmLeftServo = hardwareMap.servo.get("ArmLeftServo");
+        ArmRightServo.setDirection(Servo.Direction.REVERSE);
+        ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(34,-10, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(46,-10.5, Math.toRadians(167)))
+                .lineToLinearHeading(new Pose2d(34,-5, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(46,-5, Math.toRadians(150)))
                 .addDisplacementMarker(() -> {
 
-                    Claw.setPosition(1);
+                    targetS = 4000;
+                    sleep(1000);
+
+                    ArmLeftServo.setPosition(.1);
+                    ArmRightServo.setPosition(.1);
+                    sleep(500);
+                    Claw.setPosition(0.0);
                 })
 
                 .build();
@@ -228,49 +234,26 @@ public class PLUS_IDK_MATE extends LinearOpMode
         }
 
         /* Actually do something useful */
-        drive.followTrajectorySequence(trajSeq);
+
        // drive.update();
+        drive.followTrajectorySequence(trajSeq);
         while(opModeIsActive()) {
+            int count = 0;
+            if (count == 0){
+            targetS = 3500;
+        }
+            SlideController.setPID(pS, iS , dS);
+            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
+            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
+            double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
+            // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
+            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
 
+            double powerLeft = pidLeft + ff;
+            double powerRight = pidLeft + ff;
 
-
-
-           /* if (tagOfInterest == null) {
-
-                drive.update();
-                //drive.followTrajectorySequence(park3);
-
-            } else if (tagOfInterest.id == LEFT) {
-
-                drive.update();
-            //    drive.followTrajectorySequence(park1);
-
-                drive.followTrajectorySequence(trajSeq);
-            } else if (tagOfInterest.id == MIDDLE) {
-
-                drive.update();
-              //  drive.followTrajectorySequence(park2);
-            } else {
-
-            }
-*/
-           targetS = 4000;
-
-          //drive.update();
-             //drive.followTrajectorySequence(park3);
-             //   SlideController.setPID(pS, iS , dS);
-                int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
-                int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
-                double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-                double pidRight = SlideController.calculate(arm_pos_Right, targetS);
-                double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
-
-                double powerLeft = pidLeft + ff;
-                double powerRight = pidLeft + ff;
-
-                arm_motor_Right.setPower(powerRight);
-                arm_motor_Left.setPower(powerLeft);
-             //   double servotarget = servo.getTarget();
+            arm_motor_Right.setPower(powerRight);
+            arm_motor_Left.setPower(powerLeft);
                 telemetry.addData("posLeft", arm_pos_Left);
                 telemetry.addData("posRight", arm_pos_Right);
                 telemetry.addData("target", targetS);
@@ -290,7 +273,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         }
         if(tagOfInterest == null){
 
-            drive.followTrajectorySequence(trajSeq);
+
 
         }else if(tagOfInterest.id == LEFT){
            /* SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
