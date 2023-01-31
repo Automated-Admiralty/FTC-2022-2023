@@ -91,7 +91,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         SlideController = new PIDController(pS,iS,dS);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
-        //Claw
+        //Claw//
         Servo Claw = hardwareMap.get(Servo.class, "claw");
         Claw.setPosition(0.3);
         //traj setup
