@@ -283,15 +283,15 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // We move on to the next state
                     // Make sure we use the async follow function
                     if (!drive.isBusy()) {
-                        currentState = State.TRAJECTORY_1;
+                        currentState = State.ARMUP_1;
                         targetS = 3500;
                     }
                     break;
                 case ARMUP_1:
                     // Check if the drive class is busy following the trajectory
                     // Move on to the next state, TURN_1, once finished
-                    if (!arm_motor_Left.isBusy() && !arm_motor_Right.isBusy()) {
-                        currentState = State.ARMUP_1;
+                    if (-arm_motor_Left.getCurrentPosition() > 3300 && -arm_motor_Left.getCurrentPosition() < 3590 && -arm_motor_Right.getCurrentPosition() > 3300 && -arm_motor_Right.getCurrentPosition() < 3590) {
+                        currentState = State.SERVO_Arm_Up;
                         ArmLeftServo.setPosition(0.2);
                         ArmRightServo.setPosition(0.2);
                     }
@@ -299,16 +299,16 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                 case SERVO_Arm_Up:
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, TRAJECTORY_3, once finished
-                    if (ArmLeftServo.getPosition() != 0.2 & ArmRightServo.getPosition() != 0.2) {
-                        currentState = State.SERVO_Arm_Up;
-                       Claw.setPosition(0.3);
-                    }
+                   sleep(500);
+                        currentState = State.Claw_open;
+                       Claw.setPosition(0);
+
                     break;
                 case Claw_open:
                     // Check if the drive class is busy following the trajectory
                     // If not, move onto the next state, WAIT_1
-                    if (Claw.getPosition() != 0.3) {
-                        currentState = State.Claw_open;
+                    if (Claw.getPosition() == 0) {
+                        currentState = State.Arm_down;
 
                         // Start the wait timer once we switch to the next state
                         // This is so we can track how long we've been in the WAIT_1 state
@@ -318,8 +318,8 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                 case Arm_down:
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
-                    if (!arm_motor_Left.isBusy() && !arm_motor_Right.isBusy()) {
-                        currentState = State.Arm_down;
+                    if (-arm_motor_Left.getCurrentPosition() > -50 && -arm_motor_Left.getCurrentPosition() < 20 && -arm_motor_Right.getCurrentPosition() > -50 && -arm_motor_Right.getCurrentPosition() < 20) {
+                        currentState = State.Servo_Arm_Down;
                         ArmLeftServo.setPosition(1);
                         ArmRightServo.setPosition(1);
                     }
@@ -328,8 +328,8 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (ArmLeftServo.getPosition() != 1 & ArmRightServo.getPosition() != 1) {
-                        currentState = State.Servo_Arm_Down;
+                    if (ArmLeftServo.getPosition() == 1 & ArmRightServo.getPosition() == 1) {
+                        currentState = State.Claw_Close;
                         Claw.setPosition(0);
                     }
                     break;
@@ -337,8 +337,8 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // Do nothing in IDLE
                     // currentState does not change once in IDLE
                     // This concludes the autonomous program
-                    if (Claw.getPosition() != 0) {
-                        currentState = State.Claw_Close;
+                    if (Claw.getPosition() == 0) {
+                        currentState = State.Idle;
 
                     }
                     break;
@@ -347,7 +347,8 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // If not, move onto the next state, IDLE
                     // We are done with the program
                     if (!drive.isBusy()) {
-                        currentState = State.TRAJECTORY_1;
+                        currentState = State.ARMUP_1;
+                        targetS = 3500;
                     }
                     break;
             }
