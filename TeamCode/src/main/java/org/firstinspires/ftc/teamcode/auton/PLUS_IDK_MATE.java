@@ -22,6 +22,8 @@
 package org.firstinspires.ftc.teamcode.auton;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -29,10 +31,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.ProfiledServo;
+import org.firstinspires.ftc.teamcode.advanced.AsyncFollowingFSM;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -80,11 +85,23 @@ public class PLUS_IDK_MATE extends LinearOpMode
     int RIGHT = 3;
 
     AprilTagDetection tagOfInterest = null;
+    enum State {
+        TRAJECTORY_1,   // First, follow a splineTo() trajectory
+        ARMUP_1,   // Then, follow a lineTo() trajectory
+        SERVO_Arm_Up,         // Then we want to do a point turn
+        Claw_open,   // Then, we follow another lineTo() trajectory
+        Arm_down,         // Then we're gonna wait a second
+        Servo_Arm_Down,         // Finally, we're gonna turn again
+        Claw_Close,
+        Idle// Our bot will enter the IDLE state when done
+    }
+PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
 
     @Override
     public void runOpMode()
 
     {
+
         //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
@@ -108,18 +125,36 @@ public class PLUS_IDK_MATE extends LinearOpMode
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(34,-5, Math.toRadians(270)))
                 .lineToLinearHeading(new Pose2d(46,-5, Math.toRadians(150)))
-                .addDisplacementMarker(() -> {
-
-                    targetS = 4000;
-                    sleep(1000);
-
-                    ArmLeftServo.setPosition(.1);
-                    ArmRightServo.setPosition(.1);
-                    sleep(500);
-                    Claw.setPosition(0.0);
-                })
-
                 .build();
+        // Let's define our trajectories
+        Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
+                .splineTo(new Vector2d(45, -20), Math.toRadians(90))
+                .build();
+
+        // Second trajectory
+        // Ensure that we call trajectory1.end() as the start for this one
+        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
+                .lineTo(new Vector2d(45, 0))
+                .build();
+
+        // Define the angle to turn at
+        double turnAngle1 = Math.toRadians(-270);
+
+        // Third trajectory
+        // We have to define a new end pose because we can't just call trajectory2.end()
+        // Since there was a point turn before that
+        // So we just take the pose from trajectory2.end(), add the previous turn angle to it
+        Pose2d newLastPose = trajectory2.end().plus(new Pose2d(0, 0, turnAngle1));
+        Trajectory trajectory3 = drive.trajectoryBuilder(newLastPose)
+                .lineToConstantHeading(new Vector2d(-15, 0))
+                .build();
+
+        // Define a 1.5 second wait time
+        double waitTime1 = 1.5;
+        ElapsedTime waitTimer1 = new ElapsedTime();
+
+        // Define the angle for turn 2
+        double turnAngle2 = Math.toRadians(720);
         // traj sequence park left
 
         //traj sequence park Right
@@ -236,12 +271,87 @@ public class PLUS_IDK_MATE extends LinearOpMode
         /* Actually do something useful */
 
        // drive.update();
-        drive.followTrajectorySequence(trajSeq);
-        while(opModeIsActive()) {
-            int count = 0;
-            if (count == 0){
-            targetS = 3500;
-        }
+        currentState = State.TRAJECTORY_1;
+        drive.followTrajectorySequenceAsync(trajSeq);
+        while(opModeIsActive() && !isStopRequested()) {
+            switch (currentState) {
+
+                case TRAJECTORY_1:
+                    // Check if the drive class isn't busy
+                    // `isBusy() == true` while it's following the trajectory
+                    // Once `isBusy() == false`, the trajectory follower signals that it is finished
+                    // We move on to the next state
+                    // Make sure we use the async follow function
+                    if (!drive.isBusy()) {
+                        currentState = State.TRAJECTORY_1;
+                        targetS = 3500;
+                    }
+                    break;
+                case ARMUP_1:
+                    // Check if the drive class is busy following the trajectory
+                    // Move on to the next state, TURN_1, once finished
+                    if (!arm_motor_Left.isBusy() && !arm_motor_Right.isBusy()) {
+                        currentState = State.ARMUP_1;
+                        ArmLeftServo.setPosition(0.2);
+                        ArmRightServo.setPosition(0.2);
+                    }
+                    break;
+                case SERVO_Arm_Up:
+                    // Check if the drive class is busy turning
+                    // If not, move onto the next state, TRAJECTORY_3, once finished
+                    if (ArmLeftServo.getPosition() != 0.2 & ArmRightServo.getPosition() != 0.2) {
+                        currentState = State.SERVO_Arm_Up;
+                       Claw.setPosition(0.3);
+                    }
+                    break;
+                case Claw_open:
+                    // Check if the drive class is busy following the trajectory
+                    // If not, move onto the next state, WAIT_1
+                    if (Claw.getPosition() != 0.3) {
+                        currentState = State.Claw_open;
+
+                        // Start the wait timer once we switch to the next state
+                        // This is so we can track how long we've been in the WAIT_1 state
+                      targetS =0;
+                    }
+                    break;
+                case Arm_down:
+                    // Check if the timer has exceeded the specified wait time
+                    // If so, move on to the TURN_2 state
+                    if (!arm_motor_Left.isBusy() && !arm_motor_Right.isBusy()) {
+                        currentState = State.Arm_down;
+                        ArmLeftServo.setPosition(1);
+                        ArmRightServo.setPosition(1);
+                    }
+                    break;
+                case Servo_Arm_Down:
+                    // Check if the drive class is busy turning
+                    // If not, move onto the next state, IDLE
+                    // We are done with the program
+                    if (ArmLeftServo.getPosition() != 1 & ArmRightServo.getPosition() != 1) {
+                        currentState = State.Servo_Arm_Down;
+                        Claw.setPosition(0);
+                    }
+                    break;
+                case Claw_Close:
+                    // Do nothing in IDLE
+                    // currentState does not change once in IDLE
+                    // This concludes the autonomous program
+                    if (Claw.getPosition() != 0) {
+                        currentState = State.Claw_Close;
+
+                    }
+                    break;
+                case Idle:
+                    // Check if the drive class is busy turning
+                    // If not, move onto the next state, IDLE
+                    // We are done with the program
+                    if (!drive.isBusy()) {
+                        currentState = State.TRAJECTORY_1;
+                    }
+                    break;
+            }
+            drive.update();
             SlideController.setPID(pS, iS , dS);
             int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
             int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
@@ -261,7 +371,8 @@ public class PLUS_IDK_MATE extends LinearOpMode
                 telemetry.addData("powerRight", powerRight);
                 // telemetry.update();
                // telemetry.addData("servo target", servotarget);
-
+            Pose2d poseEstimate = drive.getPoseEstimate();
+            PoseStorage.currentPose = poseEstimate;
 
 
                 // Print pose to telemetry

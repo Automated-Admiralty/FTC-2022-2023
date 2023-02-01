@@ -34,7 +34,7 @@ public class AsyncFollowingFSM extends LinearOpMode {
 
     // This enum defines our "state"
     // This is essentially just defines the possible steps our program will take
-    enum State {
+    public enum State {
         TRAJECTORY_1,   // First, follow a splineTo() trajectory
         TRAJECTORY_2,   // Then, follow a lineTo() trajectory
         TURN_1,         // Then we want to do a point turn
