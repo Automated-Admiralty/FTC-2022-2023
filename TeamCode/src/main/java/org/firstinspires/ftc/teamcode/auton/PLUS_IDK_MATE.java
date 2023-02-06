@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2021 OpenFTC Team
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 
 package org.firstinspires.ftc.teamcode.auton;
 
@@ -63,7 +43,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
     double cx = 402.145;
     double cy = 221.506;
     private PIDController SlideController;
-
+ElapsedTime timer = new ElapsedTime();
     public static double pS = .006, iS = 0, dS = 0.0001;
     public static double fS = .01;
 
@@ -95,7 +75,7 @@ public class PLUS_IDK_MATE extends LinearOpMode
         Claw_Close,
         Idle// Our bot will enter the IDLE state when done
     }
-PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
+    PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
 
     @Override
     public void runOpMode()
@@ -110,11 +90,11 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
         arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
         //Claw//
         Servo Claw = hardwareMap.get(Servo.class, "claw");
-        Claw.setPosition(0.3);
+        Claw.setPosition(0.0);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(43.5, -60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
         Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
@@ -123,8 +103,9 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
         ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(34,-5, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(46,-5, Math.toRadians(150)))
+                .lineToLinearHeading(new Pose2d(36,-60, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(36,-14, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(50,-11.4, Math.toRadians(155)))
                 .build();
         // Let's define our trajectories
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
@@ -270,7 +251,7 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
 
         /* Actually do something useful */
 
-       // drive.update();
+        // drive.update();
         currentState = State.TRAJECTORY_1;
         drive.followTrajectorySequenceAsync(trajSeq);
         while(opModeIsActive() && !isStopRequested()) {
@@ -284,62 +265,77 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // Make sure we use the async follow function
                     if (!drive.isBusy()) {
                         currentState = State.ARMUP_1;
-                        targetS = 3500;
+                        targetS = 3900;
                     }
                     break;
                 case ARMUP_1:
                     // Check if the drive class is busy following the trajectory
                     // Move on to the next state, TURN_1, once finished
-                    if (-arm_motor_Left.getCurrentPosition() > 3300 && -arm_motor_Left.getCurrentPosition() < 3590 && -arm_motor_Right.getCurrentPosition() > 3300 && -arm_motor_Right.getCurrentPosition() < 3590) {
+                    if (-arm_motor_Left.getCurrentPosition() > 3500 && -arm_motor_Left.getCurrentPosition() < 4000 && -arm_motor_Right.getCurrentPosition() > 3500 && -arm_motor_Right.getCurrentPosition() < 4000) {
                         currentState = State.SERVO_Arm_Up;
-                        ArmLeftServo.setPosition(0.2);
-                        ArmRightServo.setPosition(0.2);
+                        ArmLeftServo.setPosition(0.08);
+                        ArmRightServo.setPosition(0.08);
+                       // sleep(1000);
+                        timer.reset();
                     }
                     break;
                 case SERVO_Arm_Up:
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, TRAJECTORY_3, once finished
-                   sleep(500);
+                //    timer.reset();
+                    if(timer.seconds() >= 1.5) {
                         currentState = State.Claw_open;
-                       Claw.setPosition(0);
-
+                        Claw.setPosition(0.3);
+timer.reset();
+                     //   sleep(500);
+                    }
                     break;
                 case Claw_open:
                     // Check if the drive class is busy following the trajectory
                     // If not, move onto the next state, WAIT_1
-                    if (Claw.getPosition() == 0) {
+                   // timer.reset();
+                    if(timer.seconds() >= 1) {
                         currentState = State.Arm_down;
+                        ArmLeftServo.setPosition(1);
+                        ArmRightServo.setPosition(1);
+                     //   sleep(500);
+    // Start the wait timer once we switch to the next state
+    // This is so we can track how long we've been in the WAIT_1 state
+                        timer.reset();
+}
 
-                        // Start the wait timer once we switch to the next state
-                        // This is so we can track how long we've been in the WAIT_1 state
-                      targetS =0;
-                    }
                     break;
                 case Arm_down:
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
-                    if (-arm_motor_Left.getCurrentPosition() > -50 && -arm_motor_Left.getCurrentPosition() < 20 && -arm_motor_Right.getCurrentPosition() > -50 && -arm_motor_Right.getCurrentPosition() < 20) {
+                    //timer.reset();
+                    if(timer.seconds() >= 1) {
+
+                        targetS = 0;
                         currentState = State.Servo_Arm_Down;
-                        ArmLeftServo.setPosition(1);
-                        ArmRightServo.setPosition(1);
+
                     }
                     break;
                 case Servo_Arm_Down:
+
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (ArmLeftServo.getPosition() == 1 & ArmRightServo.getPosition() == 1) {
+                    if (-arm_motor_Left.getCurrentPosition() > -50 && -arm_motor_Left.getCurrentPosition() < 100 && -arm_motor_Right.getCurrentPosition() > -50 && -arm_motor_Right.getCurrentPosition() < 100) {
+
                         currentState = State.Claw_Close;
-                        Claw.setPosition(0);
+                        Claw.setPosition(0.0);
+                        //sleep(500);
+                        timer.reset();
                     }
                     break;
                 case Claw_Close:
                     // Do nothing in IDLE
                     // currentState does not change once in IDLE
                     // This concludes the autonomous program
-                    if (Claw.getPosition() == 0) {
+                   // timer.reset();
+                    if(timer.seconds() >= 1) {
                         currentState = State.Idle;
-
                     }
                     break;
                 case Idle:
@@ -347,8 +343,7 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
                     // If not, move onto the next state, IDLE
                     // We are done with the program
                     if (!drive.isBusy()) {
-                        currentState = State.ARMUP_1;
-                        targetS = 3500;
+                        currentState = State.TRAJECTORY_1;
                     }
                     break;
             }
@@ -365,22 +360,22 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
 
             arm_motor_Right.setPower(powerRight);
             arm_motor_Left.setPower(powerLeft);
-                telemetry.addData("posLeft", arm_pos_Left);
-                telemetry.addData("posRight", arm_pos_Right);
-                telemetry.addData("target", targetS);
-                telemetry.addData("powerleft", powerLeft);
-                telemetry.addData("powerRight", powerRight);
-                // telemetry.update();
-               // telemetry.addData("servo target", servotarget);
+            telemetry.addData("posLeft", arm_pos_Left);
+            telemetry.addData("posRight", arm_pos_Right);
+            telemetry.addData("target", targetS);
+            telemetry.addData("powerleft", powerLeft);
+            telemetry.addData("powerRight", powerRight);
+            // telemetry.update();
+            // telemetry.addData("servo target", servotarget);
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
 
 
-                // Print pose to telemetry
-                telemetry.addData("Left Slide Postion", arm_motor_Left.getCurrentPosition());
-                telemetry.addData("Right Slide Postion", arm_motor_Right.getCurrentPosition());
+            // Print pose to telemetry
+            telemetry.addData("Left Slide Postion", arm_motor_Left.getCurrentPosition());
+            telemetry.addData("Right Slide Postion", arm_motor_Right.getCurrentPosition());
 
-                telemetry.update();
+            telemetry.update();
 
         }
         if(tagOfInterest == null){
@@ -391,15 +386,12 @@ PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
            /* SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
-
             drive.setPoseEstimate(startPose);
-
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                     .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
                     .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
                     .build();
             drive.followTrajectorySequence(trajSeq);
-
             */
 
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

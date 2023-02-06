@@ -34,6 +34,7 @@ import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
@@ -44,6 +45,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MOTOR_VELO_PID
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.TRACK_WIDTH;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.encoderTicksToInches;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.getMotorVelocityF;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
@@ -286,6 +288,19 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
+        double voltage = batteryVoltageSensor.getVoltage();
+        double scalar = 12.0 / voltage;
+        v *= scalar;
+        v1 *= scalar;
+        v2 *= scalar;
+        v3 *= scalar;
+        double maxPowerMage = Collections.max(Arrays.asList(v,v1,v2,v3,1.0));
+        if (maxPowerMage > 1) {
+        v /= maxPowerMage;
+        v1 /= maxPowerMage;
+        v2 /= maxPowerMage;
+        v3 /= maxPowerMage;
+    }
         leftFront.setPower(v);
         leftRear.setPower(v1);
         rightRear.setPower(v2);

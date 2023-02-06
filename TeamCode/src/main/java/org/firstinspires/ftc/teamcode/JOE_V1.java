@@ -136,11 +136,11 @@ public class JOE_V1 extends LinearOpMode {
                 s1pos= 0.00;
                 s2pos = 0.00;
             }else if (gamepad2.dpad_down){
-                s1pos += 0.013;
-                s2pos += 0.013;
+                s1pos += 0.015;
+                s2pos += 0.015;
             }else if (gamepad2.dpad_up){
-                s1pos -=0.013;
-                s2pos -=0.013;
+                s1pos -=0.015;
+                s2pos -=0.015;
             }else if(gamepad2.dpad_right){
             s1pos= 0.48;
             s2pos = 0.48;
