@@ -55,7 +55,7 @@ ElapsedTime timer = new ElapsedTime();
     public final double ticks_in_degreeS = 567.7/180;
 
 
-
+double time_bot_change =  .07;
     // UNITS ARE METERS
     double tagsize = 0.166;
 
@@ -81,7 +81,8 @@ ElapsedTime timer = new ElapsedTime();
     public void runOpMode()
 
     {
-
+double count = 0;
+double downPos = 0;
         //Arm
         DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
         DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
@@ -94,7 +95,7 @@ ElapsedTime timer = new ElapsedTime();
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Pose2d startPose = new Pose2d(43.5, -60, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(46 , -60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
         Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
@@ -104,9 +105,13 @@ ElapsedTime timer = new ElapsedTime();
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(36,-60, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(36,-14, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(50,-11.4, Math.toRadians(155)))
-                .build();
+                .lineToLinearHeading(new Pose2d(36,-16.1, Math.toRadians(270)))
+                .turn(Math.toRadians(-110))
+                .lineToLinearHeading(new Pose2d(51,-16.1,Math.toRadians(160)))
+                //.splineToLinearHeading(new Pose2d(50,-9), Math.toRadians(160))
+             .lineToLinearHeading(new Pose2d(50.3,1
+                     , Math.toRadians(152)))
+                               .build();
         // Let's define our trajectories
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
                 .splineTo(new Vector2d(45, -20), Math.toRadians(90))
@@ -252,7 +257,7 @@ ElapsedTime timer = new ElapsedTime();
         /* Actually do something useful */
 
         // drive.update();
-        currentState = State.TRAJECTORY_1;
+        currentState = State.ARMUP_1;
         drive.followTrajectorySequenceAsync(trajSeq);
         while(opModeIsActive() && !isStopRequested()) {
             switch (currentState) {
@@ -263,18 +268,20 @@ ElapsedTime timer = new ElapsedTime();
                     // Once `isBusy() == false`, the trajectory follower signals that it is finished
                     // We move on to the next state
                     // Make sure we use the async follow function
-                    if (!drive.isBusy()) {
-                        currentState = State.ARMUP_1;
-                        targetS = 3900;
+                    //timer.reset();
+                    if (timer.seconds() >= .35 + (count * .07)) {
+                        currentState = State.SERVO_Arm_Up;
+                        targetS = 2760;
+                        timer.reset();
                     }
                     break;
                 case ARMUP_1:
                     // Check if the drive class is busy following the trajectory
                     // Move on to the next state, TURN_1, once finished
-                    if (-arm_motor_Left.getCurrentPosition() > 3500 && -arm_motor_Left.getCurrentPosition() < 4000 && -arm_motor_Right.getCurrentPosition() > 3500 && -arm_motor_Right.getCurrentPosition() < 4000) {
-                        currentState = State.SERVO_Arm_Up;
-                        ArmLeftServo.setPosition(0.08);
-                        ArmRightServo.setPosition(0.08);
+                    if(!drive.isBusy()){
+                        currentState = State.TRAJECTORY_1;
+                        ArmLeftServo.setPosition(0.03);
+                        ArmRightServo.setPosition(0.03);
                        // sleep(1000);
                         timer.reset();
                     }
@@ -283,21 +290,25 @@ ElapsedTime timer = new ElapsedTime();
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, TRAJECTORY_3, once finished
                 //    timer.reset();
-                    if(timer.seconds() >= 1.5) {
+                    if (arm_motor_Left.getCurrentPosition() > 2500 && arm_motor_Left.getCurrentPosition() < 3500 && arm_motor_Right.getCurrentPosition() > 2500 && arm_motor_Right.getCurrentPosition() < 3500 && timer.seconds()>= .4) {
+
                         currentState = State.Claw_open;
                         Claw.setPosition(0.3);
-timer.reset();
-                     //   sleep(500);
+                        timer.reset();
                     }
+                     //   sleep(500);
+
                     break;
                 case Claw_open:
                     // Check if the drive class is busy following the trajectory
                     // If not, move onto the next state, WAIT_1
                    // timer.reset();
-                    if(timer.seconds() >= 1) {
+                    if(timer.seconds() >= .3) {
                         currentState = State.Arm_down;
-                        ArmLeftServo.setPosition(1);
-                        ArmRightServo.setPosition(1);
+                        downPos = .81 + count * .04;
+                        ArmLeftServo.setPosition(downPos);
+                        ArmRightServo.setPosition(downPos);
+
                      //   sleep(500);
     // Start the wait timer once we switch to the next state
     // This is so we can track how long we've been in the WAIT_1 state
@@ -309,7 +320,7 @@ timer.reset();
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
                     //timer.reset();
-                    if(timer.seconds() >= 1) {
+                    if(timer.seconds() >= .3) {
 
                         targetS = 0;
                         currentState = State.Servo_Arm_Down;
@@ -321,7 +332,7 @@ timer.reset();
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (-arm_motor_Left.getCurrentPosition() > -50 && -arm_motor_Left.getCurrentPosition() < 100 && -arm_motor_Right.getCurrentPosition() > -50 && -arm_motor_Right.getCurrentPosition() < 100) {
+                    if (arm_motor_Left.getCurrentPosition() > -50 && arm_motor_Left.getCurrentPosition() < 100 && arm_motor_Right.getCurrentPosition() > -50 && arm_motor_Right.getCurrentPosition() < 100) {
 
                         currentState = State.Claw_Close;
                         Claw.setPosition(0.0);
@@ -343,14 +354,15 @@ timer.reset();
                     // If not, move onto the next state, IDLE
                     // We are done with the program
                     if (!drive.isBusy()) {
-                        currentState = State.TRAJECTORY_1;
+                        count++;
+                        currentState = State.ARMUP_1;
                     }
                     break;
             }
             drive.update();
             SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = -(arm_motor_Left.getCurrentPosition());
-            int arm_pos_Right = -(arm_motor_Right.getCurrentPosition());
+            int arm_pos_Left = (arm_motor_Left.getCurrentPosition());
+            int arm_pos_Right = (arm_motor_Right.getCurrentPosition());
             double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
             // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
             double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem

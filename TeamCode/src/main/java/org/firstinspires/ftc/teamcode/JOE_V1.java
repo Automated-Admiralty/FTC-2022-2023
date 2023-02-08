@@ -115,11 +115,11 @@ public class JOE_V1 extends LinearOpMode {
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
 
-            if(gamepad1.a && -LeftSlide.getCurrentPosition() < 4000 && -
-                    RightSlide.getCurrentPosition() < 4000){
+            if(gamepad1.a && LeftSlide.getCurrentPosition() < 3000 &&
+                    RightSlide.getCurrentPosition() < 3000){
                 LeftSlide.setPower(1);
                 RightSlide.setPower(1);
-            } else if(gamepad1.b && -LeftSlide.getCurrentPosition() > 0 && -RightSlide.getCurrentPosition() > 0){
+            } else if(gamepad1.b && LeftSlide.getCurrentPosition() > 0 && RightSlide.getCurrentPosition() > 0){
                 LeftSlide.setPower(-1);
                 RightSlide.setPower(-1);
             } else {
@@ -152,10 +152,10 @@ public class JOE_V1 extends LinearOpMode {
 //lbTriggred = gamepad2.left_bumper;
 //rbTriggerd = gamepad2.right_bumper;
 
-            if(gamepad2.a){
+            if(gamepad2.b){
                 GripPos = 0.3;
             }
-            if(gamepad2.b){
+            if(gamepad2.a){
                 GripPos = 0;
             }
             Gripper.setPosition(GripPos);
