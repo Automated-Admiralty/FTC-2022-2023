@@ -103,17 +103,19 @@ double downPos = 0;
         ArmRightServo.setDirection(Servo.Direction.REVERSE);
         ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         //Traj Sequence Scoring
+
+        //this is the steps of the driving
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(38.2,-60, Math.toRadians(270)))
                 .lineToLinearHeading(new Pose2d(38.2,-9, Math.toRadians(270)))
                 .lineToLinearHeading(new Pose2d(38.2,-15.8, Math.toRadians(270)))
                 .turn(Math.toRadians(-110))
-
                 .lineToLinearHeading(new Pose2d(51,-15.8,Math.toRadians(160)))
                 //.splineToLinearHeading(new Pose2d(50,-9), Math.toRadians(160))
-             .lineToLinearHeading(new Pose2d(52.5,-.9
-                     , Math.toRadians(150)))
+             .lineToLinearHeading(new Pose2d(52.5,-.9, Math.toRadians(150)))
                                .build();
+
+
         // Let's define our trajectories
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
                 .splineTo(new Vector2d(45, -20), Math.toRadians(90))
@@ -412,6 +414,7 @@ double downPos = 0;
                     .lineToLinearHeading(new Pose2d(-10,-15.8, Math.toRadians(160)))
                     .build();
             drive.followTrajectorySequence(ParkLeft);
+
         }else if(tagOfInterest.id == MIDDLE){
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
