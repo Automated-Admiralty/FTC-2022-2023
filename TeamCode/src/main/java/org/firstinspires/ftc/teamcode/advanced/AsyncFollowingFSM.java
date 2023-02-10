@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.advanced;
+package org.firstinspires.ftc.teamcode.advanced;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import   org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
@@ -33,7 +34,7 @@ public class AsyncFollowingFSM extends LinearOpMode {
 
     // This enum defines our "state"
     // This is essentially just defines the possible steps our program will take
-    enum State {
+    public enum State {
         TRAJECTORY_1,   // First, follow a splineTo() trajectory
         TRAJECTORY_2,   // Then, follow a lineTo() trajectory
         TURN_1,         // Then we want to do a point turn

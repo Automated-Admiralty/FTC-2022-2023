@@ -1,21 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.util.Angle;
-import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDriveCancelable;
-
 import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 
 /**
@@ -45,29 +41,15 @@ import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
  * This sample utilizes the SampleMecanumDriveCancelable.java and TrajectorySequenceRunnerCancelable.java
  * classes. Please ensure that these files are copied into your own project.
  */
-
-@TeleOp
-public class MainTeleOp extends LinearOpMode {
-    // Define 2 states, drive control or automatic control
+@TeleOp(name = "JOE")
+public class JOE_V1 extends LinearOpMode {
+    // Define 2 states, drive control or automatic
+    //control
     enum Mode {
         DRIVER_CONTROL,
         AUTOMATIC_CONTROL
     }
-    private ProfiledServo servo;
-    //Slide PIDF
-    private PIDController SlideController;
-
-    public static double pS = .006, iS = 0, dS = 0.0001;
-    public static double fS = .01;
-
-
-    public static int targetS = 0;
-
-
-
-    public final double ticks_in_degreeS = 567.7/180;
-
-
+    // make my new Vars
 
     Mode currentMode = Mode.DRIVER_CONTROL;
 
@@ -77,31 +59,31 @@ public class MainTeleOp extends LinearOpMode {
     double targetAHeading = Math.toRadians(0);
 
 
-
     // The location we want the bot to automatically go to when we press the B button
     Vector2d targetBVector = new Vector2d(-15, 25);
 
     // The angle we want to align to when we press Y
     double targetAngle = Math.toRadians(45);
+
     @Override
     public void runOpMode() throws InterruptedException {
-       DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
-        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
-        double s1pos = 0;
-        servo = new ProfiledServo(hardwareMap, "ArmLeftServo", "ArmRightServo", .3, .3, .3, .3, s1pos);
-        Servo Claw = hardwareMap.get(Servo.class, "claw");
-
-        arm_motor_Left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        arm_motor_Left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SlideController = new PIDController(pS,iS,dS);
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
-        arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
-        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
-
-
+        Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
+        Servo ArmLeftServo = hardwareMap.servo.get("ArmLeftServo");
+       // CRServo suckFront = hardwareMap.crservo.get("suckFront");
+        //CRServo suckBack = hardwareMap.crservo.get("suckBack");
+        DcMotor LeftSlide = hardwareMap.dcMotor.get("left slide");
+        DcMotor RightSlide = hardwareMap.dcMotor.get("Right slide");
+        LeftSlide.setDirection(DcMotor.Direction.REVERSE);
+        RightSlide.setDirection(DcMotor.Direction.FORWARD);
+        LeftSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RightSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        LeftSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RightSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LeftSlide.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
+        RightSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Servo Gripper = hardwareMap.servo.get("claw");
+        ArmRightServo.setDirection(Servo.Direction.REVERSE);
+        ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         // Initialize custom cancelable SampleMecanumDrive class
         // Ensure that the contents are copied over from https://github.com/NoahBres/road-runner-quickstart/blob/advanced-examples/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/drive/advanced/SampleMecanumDriveCancelable.java
         // and https://github.com/NoahBres/road-runner-quickstart/blob/advanced-examples/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/drive/advanced/TrajectorySequenceRunnerCancelable.java
@@ -114,7 +96,9 @@ public class MainTeleOp extends LinearOpMode {
         // Retrieve our pose from the PoseStorage.currentPose static field
         // See AutoTransferPose.java for further details
         drive.setPoseEstimate(PoseStorage.currentPose);
-
+        double GripPos = 0;
+        double s1pos =0.0;
+        double s2pos = 0;
         boolean lbTriggred = false;
         boolean rbTriggerd = false;
         waitForStart();
@@ -131,79 +115,71 @@ public class MainTeleOp extends LinearOpMode {
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
 
-
-
-
-            if(gamepad2.y ){
-                s1pos = 0;
-            }else if(gamepad2.a){
-                s1pos = 1;
-            }       if(gamepad2.b ){
-                s1pos = 0.5;
-            }else if(gamepad2.x){
-                s1pos = 0.3;
+            if(gamepad1.a && LeftSlide.getCurrentPosition() < 3000 &&
+                    RightSlide.getCurrentPosition() < 3000){
+                LeftSlide.setPower(1);
+                RightSlide.setPower(1);
+            } else if(gamepad1.b && LeftSlide.getCurrentPosition() > 0 && RightSlide.getCurrentPosition() > 0){
+                LeftSlide.setPower(-1);
+                RightSlide.setPower(-1);
+            } else {
+                LeftSlide.setPower(.00);
+                RightSlide.setPower(.00);
             }
 
+            ArmLeftServo.setPosition(s2pos);
+            ArmRightServo.setPosition(s1pos);
             if(gamepad2.left_bumper ){
-                Claw.setPosition(0);
+                s1pos =0.77;
+                s2pos = 0.77;
             }else if(gamepad2.right_bumper){
-                 Claw.setPosition(0.3);
+                s1pos= 0.00;
+                s2pos = 0.00;
+            }else if (gamepad2.dpad_down){
+                s1pos += 0.015;
+                s2pos += 0.015;
+            }else if (gamepad2.dpad_up){
+                s1pos -=0.015;
+                s2pos -=0.015;
+            }else if(gamepad2.dpad_right){
+            s1pos= 0.48;
+            s2pos = 0.48;
+        } else if(gamepad2.dpad_left){
+            s1pos= 0.35;
+            s2pos = 0.35;
+        }
+
+//lbTriggred = gamepad2.left_bumper;
+//rbTriggerd = gamepad2.right_bumper;
+
+            if(gamepad2.b){
+                GripPos = 0.3;
             }
-
-            servo.setPosition(s1pos);
-
-            if(gamepad2.dpad_up && targetS <= 4000){
-                targetS = 4000;
-            }else if(gamepad2.dpad_down && targetS >= 0){
-                targetS = 0;
-            }else if(gamepad2.dpad_left && targetS != 3000){
-                targetS = 3000;
-            }else if(gamepad2.dpad_right && targetS != 1000){
-                targetS = 1000;
+            if(gamepad2.a){
+                GripPos = 0;
             }
-            if(gamepad1.dpad_up && targetS != 4000){
-                targetS = 4000;
-            }else if(gamepad1.dpad_down && targetS != 0){
-                targetS = 0;
+            Gripper.setPosition(GripPos);
+            /*if (gamepad2.a){
+                suckFront.setPower(-1);
+                suckBack.setPower(-1);
+            }else if (gamepad2.b){
+                suckFront.setPower(1);
+                suckBack.setPower(1);
+            }else {
+                suckFront.setPower(0);
+                suckBack.setPower(0);
             }
-
-            servo.periodic();
-
-            SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = (arm_motor_Left.getCurrentPosition());
-            int arm_pos_Right = (arm_motor_Right.getCurrentPosition());
-            double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-            double pidRight = SlideController.calculate(arm_pos_Right, targetS);
-            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
-
-            double powerLeft = pidLeft + ff;
-            double powerRight = pidRight + ff;
-
-            arm_motor_Right.setPower(-powerRight);
-            arm_motor_Left.setPower(-powerLeft);
-
-
-            double servotarget = servo.getTarget();
-            telemetry.addData("posLeft", arm_pos_Left);
-            telemetry.addData("posRight", arm_pos_Right);
-            telemetry.addData("target", targetS);
-            telemetry.addData("powerleft", powerLeft);
-            telemetry.addData("powerRight", powerRight);
-           // telemetry.update();
-            telemetry.addData("servo target", servotarget);
-
-
-
+*/
             // Print pose to telemetry
-            telemetry.addData("Left Slide Postion", arm_motor_Left.getCurrentPosition());
-            telemetry.addData("Right Slide Postion", arm_motor_Right.getCurrentPosition());
+            telemetry.addData("Left Slide Postion", LeftSlide.getCurrentPosition());
+            telemetry.addData("Right Slide Postion", RightSlide.getCurrentPosition());
             telemetry.addData("mode", currentMode);
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("Servo Target S1", s1pos);
+            telemetry.addData("Servo Target S2", s2pos);
             telemetry.update();
-
-
 
             // We follow different logic based on whether we are in manual driver control or switch
             // control to the automatic mode
