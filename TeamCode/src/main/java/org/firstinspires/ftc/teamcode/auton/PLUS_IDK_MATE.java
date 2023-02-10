@@ -104,13 +104,15 @@ double downPos = 0;
         ArmLeftServo.setDirection(Servo.Direction.REVERSE);
         //Traj Sequence Scoring
         TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(36,-60, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(36,-16.1, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(38.2,-60, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(38.2,-9, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(38.2,-15.8, Math.toRadians(270)))
                 .turn(Math.toRadians(-110))
-                .lineToLinearHeading(new Pose2d(51,-16.1,Math.toRadians(160)))
+
+                .lineToLinearHeading(new Pose2d(51,-15.8,Math.toRadians(160)))
                 //.splineToLinearHeading(new Pose2d(50,-9), Math.toRadians(160))
-             .lineToLinearHeading(new Pose2d(50.3,1
-                     , Math.toRadians(152)))
+             .lineToLinearHeading(new Pose2d(52.5,-.9
+                     , Math.toRadians(150)))
                                .build();
         // Let's define our trajectories
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
@@ -269,7 +271,7 @@ double downPos = 0;
                     // We move on to the next state
                     // Make sure we use the async follow function
                     //timer.reset();
-                    if (timer.seconds() >= .35 + (count * .07)) {
+                    if (timer.seconds() >= .35 + (count * .075)) {
                         currentState = State.SERVO_Arm_Up;
                         targetS = 2760;
                         timer.reset();
@@ -303,9 +305,9 @@ double downPos = 0;
                     // Check if the drive class is busy following the trajectory
                     // If not, move onto the next state, WAIT_1
                    // timer.reset();
-                    if(timer.seconds() >= .3) {
+                    if(timer.seconds() >= .4) {
                         currentState = State.Arm_down;
-                        downPos = .81 + count * .04;
+                        downPos = .83 + count * .026;
                         ArmLeftServo.setPosition(downPos);
                         ArmRightServo.setPosition(downPos);
 
@@ -320,7 +322,7 @@ double downPos = 0;
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
                     //timer.reset();
-                    if(timer.seconds() >= .3) {
+                    if(timer.seconds() >= .4) {
 
                         targetS = 0;
                         currentState = State.Servo_Arm_Down;
@@ -345,19 +347,25 @@ double downPos = 0;
                     // currentState does not change once in IDLE
                     // This concludes the autonomous program
                    // timer.reset();
-                    if(timer.seconds() >= 1) {
+                    if(timer.seconds() >= .2) {
+                        count++;
                         currentState = State.Idle;
+                        timer.reset();
                     }
                     break;
                 case Idle:
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (!drive.isBusy()) {
-                        count++;
+                    if (timer.seconds() >= .1){
                         currentState = State.ARMUP_1;
                     }
                     break;
+            }
+            if(count == 6 && currentState.equals(State.Idle)){
+                ArmLeftServo.setPosition(.005);
+                ArmRightServo.setPosition(.005);
+                break;
             }
             drive.update();
             SlideController.setPID(pS, iS , dS);
@@ -395,40 +403,31 @@ double downPos = 0;
 
 
         }else if(tagOfInterest.id == LEFT){
-           /* SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPose = new Pose2d(36, -60, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-            TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(34,-8, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(46,-6.5, Math.toRadians(150)))
-                    .build();
-            drive.followTrajectorySequence(trajSeq);
-            */
 
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
             drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkLeft = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-34, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(-10,-34, Math.toRadians(270)))
+            TrajectorySequence ParkLeft = drive.trajectorySequenceBuilder(startPosePost)
+                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
+                    .lineToLinearHeading(new Pose2d(-10,-15.8, Math.toRadians(160)))
                     .build();
             drive.followTrajectorySequence(ParkLeft);
         }else if(tagOfInterest.id == MIDDLE){
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
             drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkMid = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
+            TrajectorySequence ParkMiddle = drive.trajectorySequenceBuilder(startPosePost)
+                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
+                    .lineToLinearHeading(new Pose2d(37,-15.8, Math.toRadians(160)))
                     .build();
-            drive.followTrajectorySequence(ParkMid);
+            drive.followTrajectorySequence(ParkMiddle);
         }else{
             drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(46, -10.5, Math.toRadians(167));
+            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
             drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkRight = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(35,-33, Math.toRadians(270)))
-                    .lineToLinearHeading(new Pose2d(90,-33, Math.toRadians(270)))
+            TrajectorySequence ParkRight = drive.trajectorySequenceBuilder(startPosePost)
+                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
+                    .lineToLinearHeading(new Pose2d(60,-15.8, Math.toRadians(160)))
                     .build();
             drive.followTrajectorySequence(ParkRight);
         }
