@@ -14,8 +14,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.ProfiledServo;
-import org.firstinspires.ftc.teamcode.advanced.AsyncFollowingFSM;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
@@ -27,7 +25,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 
 @TeleOp
-public class PLUS_IDK_MATE extends LinearOpMode
+public class PurplePlusYellowBlueFar extends LinearOpMode
 {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -75,7 +73,7 @@ double time_bot_change =  .07;
         Claw_Close,
         Idle// Our bot will enter the IDLE state when done
     }
-    PLUS_IDK_MATE.State currentState = PLUS_IDK_MATE.State.Idle;
+    PurplePlusYellowBlueFar.State currentState = PurplePlusYellowBlueFar.State.Idle;
 
     @Override
     public void runOpMode()
