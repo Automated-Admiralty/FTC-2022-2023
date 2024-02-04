@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Common.RobotHardware.RobotHardware;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
@@ -82,48 +83,66 @@ double time_bot_change =  .07;
 double count = 0;
 double downPos = 0;
         //Arm
-        DcMotorEx arm_motor_Left = hardwareMap.get(DcMotorEx.class, "left slide");
-        DcMotorEx arm_motor_Right = hardwareMap.get(DcMotorEx.class, "Right slide");
-        SlideController = new PIDController(pS,iS,dS);
-        arm_motor_Left.setDirection(DcMotorSimple.Direction.FORWARD);
-        arm_motor_Left.setDirection(DcMotorSimple.Direction.REVERSE);
+        RobotHardware robot = new RobotHardware(hardwareMap);
         //Claw//
         Servo Claw = hardwareMap.get(Servo.class, "claw");
         Claw.setPosition(0.0);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Pose2d startPose = new Pose2d(46 , -60, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(-35 , 60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
-        Servo ArmRightServo = hardwareMap.servo.get("ArmRightServo");
-        Servo ArmLeftServo = hardwareMap.servo.get("ArmLeftServo");
-        ArmRightServo.setDirection(Servo.Direction.REVERSE);
-        ArmLeftServo.setDirection(Servo.Direction.REVERSE);
+
         //Traj Sequence Scoring
 
         //this is the steps of the driving
-        TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(38.2,-60, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(38.2,-9, Math.toRadians(270)))
-                .lineToLinearHeading(new Pose2d(38.2,-15.8, Math.toRadians(270)))
-                .turn(Math.toRadians(-110))
-                .lineToLinearHeading(new Pose2d(51,-15.8,Math.toRadians(160)))
-                //.splineToLinearHeading(new Pose2d(50,-9), Math.toRadians(160))
-             .lineToLinearHeading(new Pose2d(52.5,-.9, Math.toRadians(150)))
+        TrajectorySequence MiddlePurplePixelPlace = drive.trajectorySequenceBuilder(startPose)
+                .forward(28)
+               // .turn(Math.toRadians(90))
                                .build();
 
 
         // Let's define our trajectories
-        Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
-                .splineTo(new Vector2d(45, -20), Math.toRadians(90))
+        Trajectory PurplePixelPlaceRight = drive.trajectoryBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(-46.5,38))
                 .build();
 
         // Second trajectory
         // Ensure that we call trajectory1.end() as the start for this one
-        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
-                .lineTo(new Vector2d(45, 0))
+        TrajectorySequence PurplePlacePixelLeft = drive.trajectorySequenceBuilder(startPose)
+                .forward(28)
+                .turn(Math.toRadians(90))
+                .forward(2)
                 .build();
+
+        TrajectorySequence MoveToBoardCenter = drive.trajectorySequenceBuilder(MiddlePurplePixelPlace.end())
+                .strafeRight(18)
+                .splineToConstantHeading(new Vector2d(-28,11),Math.toRadians(0))
+                .strafeLeft(75)
+                .back(24)
+                .turn(Math.toRadians(-90))
+                .build();
+        TrajectorySequence MoveToBoardRight = drive.trajectorySequenceBuilder(PurplePixelPlaceRight.end())
+                .strafeLeft(8)
+                .splineToConstantHeading(new Vector2d(-28,11),Math.toRadians(0))
+                .strafeLeft(73)
+                .back(16)
+                .turn(Math.toRadians(-90))
+                .build();
+        TrajectorySequence MoveToBoardLeft = drive.trajectorySequenceBuilder(PurplePlacePixelLeft.end())
+                .back(18)
+                .splineToConstantHeading(new Vector2d(-28,11),Math.toRadians(0))
+                .turn(Math.toRadians(-90))
+                .strafeLeft(75)
+                .back(30)
+                .build();
+
+        // Let's define our trajectories
+
+
+        // Second trajectory
+        // Ensure that we call trajectory1.end() as the start for this one
 
         // Define the angle to turn at
         double turnAngle1 = Math.toRadians(-270);
