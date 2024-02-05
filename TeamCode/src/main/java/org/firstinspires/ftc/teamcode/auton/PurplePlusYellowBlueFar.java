@@ -259,19 +259,33 @@ double downPos = 0;
 
        // drive.update();
         int SelectedLocation = TeamElementSubsystem.elementDetection(telemetry);
-        currentState = State.OUTAKESPIKE;
-        if(TeamElementSubsystem.elementDetection(telemetry) == 1) {
-            drive.followTrajectorySequenceAsync(PurplePlacePixelLeft);
-        } else if (TeamElementSubsystem.elementDetection(telemetry) == 3) {
-            drive.followTrajectoryAsync(PurplePixelPlaceRight);
-        }else {
-            drive.followTrajectorySequenceAsync(MiddlePurplePixelPlace);
-        }
+        currentState = State.SPIKEPLACETRAJ;
+
 
         while(opModeIsActive() && !isStopRequested()) {
             switch (currentState) {
 
                 case SPIKEPLACETRAJ:
+                    if(SelectedLocation == 1) {
+                        drive.followTrajectorySequenceAsync(PurplePlacePixelLeft);
+                    } else if (SelectedLocation == 3) {
+                        drive.followTrajectoryAsync(PurplePixelPlaceRight);
+                    }else {
+                        drive.followTrajectorySequenceAsync(MiddlePurplePixelPlace);
+                    }
+                    // Check if the drive class isn't busy
+                    // `isBusy() == true` while it's following the trajectory
+                    // Once `isBusy() == false`, the trajectory follower signals that it is finished
+                    // We move on to the next state
+                    // Make sure we use the async follow function
+                    //timer.reset();
+
+                    if (timer.seconds() >= .35 ) {
+                        currentState = State.OUTAKESPIKE;
+                        timer.reset();
+                    }
+                    break;
+                case OUTAKESPIKE:
                     // Check if the drive class isn't busy
                     // `isBusy() == true` while it's following the trajectory
                     // Once `isBusy() == false`, the trajectory follower signals that it is finished
