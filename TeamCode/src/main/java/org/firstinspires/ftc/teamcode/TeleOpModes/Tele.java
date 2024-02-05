@@ -26,7 +26,7 @@ public class Tele extends LinearOpMode {
     public int SlideTarget = 0;
 
     public enum SlideState{
-        RETRACTED(10),
+        RETRACTED(0),
         EXTEND1(300),
         EXTEND2(600),
         EXTEND3(900),

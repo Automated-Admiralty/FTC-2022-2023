@@ -13,8 +13,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Common.RobotHardware.RobotHardware;
+import org.firstinspires.ftc.teamcode.Common.SubSyststem.TeamElementSubsystem;
+import org.firstinspires.ftc.teamcode.Common.Tools.PIDCONTROLLERTOOL;
+import org.firstinspires.ftc.teamcode.TeleOpModes.Tele;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.advanced.PoseStorage;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
@@ -28,8 +32,17 @@ import java.util.ArrayList;
 @TeleOp
 public class PurplePlusYellowBlueFar extends LinearOpMode
 {
-    OpenCvCamera camera;
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
+    static final String SPIKE_CENTER = "center";
+    static final String SPIKE_LEFT = "left";
+    static final String SPIKE_RIGHT = "right";
+
+    static final String SIDE_FAR = "far";
+    static final String SIDE_CLOSE = "close";
+
+    static final String ALLIANCE_RED = "red";
+    static final String ALLIANCE_BLUE = "blue";
+    // OpenCvCamera camera;
+    TeamElementSubsystem TeamElementSubsystem;
 
     static final double FEET_PER_METER = 3.28084;
 
@@ -65,17 +78,64 @@ double time_bot_change =  .07;
 
     AprilTagDetection tagOfInterest = null;
     enum State {
-        TRAJECTORY_1,   // First, follow a splineTo() trajectory
-        ARMUP_1,   // Then, follow a lineTo() trajectory
-        SERVO_Arm_Up,         // Then we want to do a point turn
-        Claw_open,   // Then, we follow another lineTo() trajectory
-        Arm_down,         // Then we're gonna wait a second
-        Servo_Arm_Down,         // Finally, we're gonna turn again
-        Claw_Close,
+        SPIKEPLACETRAJ,   // First, follow a splineTo() trajectory
+        OUTAKESPIKE,   // Then, follow a lineTo() trajectory
+        BACKBOARDTRAJ,         // Then we want to do a point turn
+        ARMUP,   // Then, we follow another lineTo() trajectory
+        MINIARMCLAWPIVOT,         // Then we're gonna wait a second
+               // Finally, we're gonna turn again
+        CLAWOPEN,
+        MINIARMRESET,
+        SlideRetract,
         Idle// Our bot will enter the IDLE state when done
     }
     PurplePlusYellowBlueFar.State currentState = PurplePlusYellowBlueFar.State.Idle;
+    public enum ASlideState{
+        ARETRACTED(0),
+        AEXTEND1(300),
+        AEXTEND2(600),
+        AEXTEND3(900),
+        AEXTEND4(1200),
+        AEXTEND5(1500),
+        AMAXEXTEND(1800);
+        private final int Aticks;
+        private ASlideState(final int Aticks) { this.Aticks = Aticks; }
 
+
+    }
+    ASlideState ACurrentSlideState = ASlideState.ARETRACTED;
+
+
+
+
+    //Mini Arm State and var
+    public enum AMiniArmState{
+        AScoring(.7),
+        AHOVERING(.0),
+        AIntaking(.05);
+
+        private final double Aminiarmangle;
+        private AMiniArmState(final double Aminiarmangle) { this.Aminiarmangle = Aminiarmangle; }
+
+
+    }
+   AMiniArmState ACurrentMiniArmState = AMiniArmState.AHOVERING;
+    // public double MiniArmTarget = 0;
+
+
+    //ClawPivot
+    public enum AClawPivotState{
+        ARetractedPivot(.0),
+        AExtend1Pivot(.2),
+        AExtend2Pivot(.22),
+        AExtend3Pivot(.24),
+        AExtend4Pivot(.26),
+        AExtend5Pivot(.28),
+        AMaxHiehgtPivot(.3);
+        private final double AClawAngle;
+        private AClawPivotState(final double AClawAngle) { this.AClawAngle = AClawAngle; }
+    }
+   AClawPivotState ACurrentClawPivot = AClawPivotState.ARetractedPivot;
     @Override
     public void runOpMode()
 
@@ -133,9 +193,11 @@ double downPos = 0;
         TrajectorySequence MoveToBoardLeft = drive.trajectorySequenceBuilder(PurplePlacePixelLeft.end())
                 .back(18)
                 .splineToConstantHeading(new Vector2d(-28,11),Math.toRadians(0))
-                .turn(Math.toRadians(-90))
-                .strafeLeft(75)
-                .back(30)
+                .splineTo(new Vector2d(-28+75,11),Math.toRadians(0))
+                .turn(Math.toRadians(180))
+                // .turn(Math.toRadians(-90))
+                //.strafeLeft(75)
+                .strafeRight(30)
                 .build();
 
         // Let's define our trajectories
@@ -147,47 +209,20 @@ double downPos = 0;
         // Define the angle to turn at
         double turnAngle1 = Math.toRadians(-270);
 
-        // Third trajectory
-        // We have to define a new end pose because we can't just call trajectory2.end()
-        // Since there was a point turn before that
-        // So we just take the pose from trajectory2.end(), add the previous turn angle to it
-        Pose2d newLastPose = trajectory2.end().plus(new Pose2d(0, 0, turnAngle1));
-        Trajectory trajectory3 = drive.trajectoryBuilder(newLastPose)
-                .lineToConstantHeading(new Vector2d(-15, 0))
-                .build();
 
-        // Define a 1.5 second wait time
+
+
         double waitTime1 = 1.5;
         ElapsedTime waitTimer1 = new ElapsedTime();
 
-        // Define the angle for turn 2
-        double turnAngle2 = Math.toRadians(720);
-        // traj sequence park left
+        TeamElementSubsystem = new TeamElementSubsystem(hardwareMap);
 
-        //traj sequence park Right
+        String alliance = ALLIANCE_BLUE;
+        String spike = SPIKE_LEFT;
+        String side = SIDE_CLOSE;
 
-        // traj sequence park center
 
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
-        camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-
-        {
-            @Override
-            public void onOpened()
-            {
-                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode)
-            {
-
-            }
-        });
 
         telemetry.setMsTransmissionInterval(50);
 
@@ -197,61 +232,7 @@ double downPos = 0;
          */
         while (!isStarted() && !isStopRequested())
         {
-            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
-            if(currentDetections.size() != 0)
-            {
-                boolean tagFound = false;
-
-                for(AprilTagDetection tag : currentDetections)
-                {
-                    if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT)
-                    {
-                        tagOfInterest = tag;
-                        tagFound = true;
-                        break;
-                    }
-                }
-
-                if(tagFound)
-                {
-                    telemetry.addLine("Tag of interest is in sight!\n\nLocation data:");
-                    tagToTelemetry(tagOfInterest);
-                }
-                else
-                {
-                    telemetry.addLine("Don't see tag of interest :(");
-
-                    if(tagOfInterest == null)
-                    {
-                        telemetry.addLine("(The tag has never been seen)");
-                    }
-                    else
-                    {
-                        telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                        tagToTelemetry(tagOfInterest);
-                    }
-                }
-
-            }
-            else
-            {
-                telemetry.addLine("Don't see tag of interest :(");
-
-                if(tagOfInterest == null)
-                {
-                    telemetry.addLine("(The tag has never been seen)");
-                }
-                else
-                {
-                    telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                    tagToTelemetry(tagOfInterest);
-                }
-
-            }
-
-            telemetry.update();
-            sleep(20);
         }
 
         /*
@@ -260,75 +241,89 @@ double downPos = 0;
          */
 
 
+        PIDCONTROLLERTOOL ASlideControllerLeft = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.LeftSlide);//TODO tune these values in the test file
+        PIDCONTROLLERTOOL ASlideControllerRight = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.RightSlide);//TODO tune these values in the test file
+        robot.LeftSlide.setPower(ASlideControllerLeft.calculatePid(ACurrentSlideState.Aticks));
+        robot.RightSlide.setPower(ASlideControllerRight.calculatePid(ACurrentSlideState.Aticks));
+        robot.MiniArmLeft.setPosition(ACurrentMiniArmState.Aminiarmangle);
+        robot.MiniArmRight.setPosition(ACurrentMiniArmState.Aminiarmangle);
+        robot.ClawPivotLeft.setPosition(ACurrentClawPivot.AClawAngle);
+        robot.ClawPivotRight.setPosition(ACurrentClawPivot.AClawAngle);
+        robot.Claw.setPosition(1);
 
         /* Update the telemetry */
 
-        if(tagOfInterest != null)
-        {
-            telemetry.addLine("Tag snapshot:\n");
-            tagToTelemetry(tagOfInterest);
-            telemetry.update();
-        }
-        else
-        {
-            telemetry.addLine("No tag snapshot available, it was never sighted during the init loop :(");
-            telemetry.update();
-        }
+
 
         /* Actually do something useful */
 
-        // drive.update();
-        currentState = State.ARMUP_1;
-        drive.followTrajectorySequenceAsync(trajSeq);
+       // drive.update();
+        int SelectedLocation = TeamElementSubsystem.elementDetection(telemetry);
+        currentState = State.OUTAKESPIKE;
+        if(TeamElementSubsystem.elementDetection(telemetry) == 1) {
+            drive.followTrajectorySequenceAsync(PurplePlacePixelLeft);
+        } else if (TeamElementSubsystem.elementDetection(telemetry) == 3) {
+            drive.followTrajectoryAsync(PurplePixelPlaceRight);
+        }else {
+            drive.followTrajectorySequenceAsync(MiddlePurplePixelPlace);
+        }
+
         while(opModeIsActive() && !isStopRequested()) {
             switch (currentState) {
 
-                case TRAJECTORY_1:
+                case SPIKEPLACETRAJ:
                     // Check if the drive class isn't busy
                     // `isBusy() == true` while it's following the trajectory
                     // Once `isBusy() == false`, the trajectory follower signals that it is finished
                     // We move on to the next state
                     // Make sure we use the async follow function
                     //timer.reset();
-                    if (timer.seconds() >= .35 + (count * .075)) {
-                        currentState = State.SERVO_Arm_Up;
-                        targetS = 2760;
+                    robot.Intake.setPower(-.5);
+                    if (timer.seconds() >= .35 ) {
+                        currentState = State.BACKBOARDTRAJ;
                         timer.reset();
                     }
                     break;
-                case ARMUP_1:
+                case BACKBOARDTRAJ:
                     // Check if the drive class is busy following the trajectory
                     // Move on to the next state, TURN_1, once finished
+                    if(SelectedLocation == 1) {
+                        drive.followTrajectorySequenceAsync(MoveToBoardLeft);
+                    } else if (SelectedLocation == 3) {
+                        drive.followTrajectorySequenceAsync(MoveToBoardRight);
+                    }else {
+                        drive.followTrajectorySequenceAsync(MoveToBoardCenter);
+                    }
+                    robot.Intake.setPower(0);
                     if(!drive.isBusy()){
-                        currentState = State.TRAJECTORY_1;
-                        ArmLeftServo.setPosition(0.03);
-                        ArmRightServo.setPosition(0.03);
-                       // sleep(1000);
+                        currentState = State.ARMUP;
+
+
                         timer.reset();
                     }
                     break;
-                case SERVO_Arm_Up:
+                case ARMUP:
+                    ACurrentSlideState = ASlideState.AEXTEND3;
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, TRAJECTORY_3, once finished
                 //    timer.reset();
-                    if (arm_motor_Left.getCurrentPosition() > 2500 && arm_motor_Left.getCurrentPosition() < 3500 && arm_motor_Right.getCurrentPosition() > 2500 && arm_motor_Right.getCurrentPosition() < 3500 && timer.seconds()>= .4) {
+                    if(timer.seconds()>= .4) {
 
-                        currentState = State.Claw_open;
-                        Claw.setPosition(0.3);
-                        timer.reset();
+                        currentState = State.MINIARMCLAWPIVOT;
+
                     }
                      //   sleep(500);
 
                     break;
-                case Claw_open:
+                case MINIARMCLAWPIVOT:
                     // Check if the drive class is busy following the trajectory
                     // If not, move onto the next state, WAIT_1
                    // timer.reset();
+                    ACurrentMiniArmState = AMiniArmState.AScoring;
+                    ACurrentClawPivot = AClawPivotState.AExtend3Pivot;
                     if(timer.seconds() >= .4) {
-                        currentState = State.Arm_down;
-                        downPos = .83 + count * .026;
-                        ArmLeftServo.setPosition(downPos);
-                        ArmRightServo.setPosition(downPos);
+                        currentState = State.CLAWOPEN;
+
 
                      //   sleep(500);
     // Start the wait timer once we switch to the next state
@@ -337,82 +332,68 @@ double downPos = 0;
 }
 
                     break;
-                case Arm_down:
+                case CLAWOPEN:
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
                     //timer.reset();
-                    if(timer.seconds() >= .4) {
+                    robot.Claw.setPosition(0);
+                    if(timer.seconds() >= .3) {
 
-                        targetS = 0;
-                        currentState = State.Servo_Arm_Down;
 
+                        currentState = State.MINIARMRESET;
+                        timer.reset();
                     }
                     break;
-                case Servo_Arm_Down:
+                case MINIARMRESET:
 
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (arm_motor_Left.getCurrentPosition() > -50 && arm_motor_Left.getCurrentPosition() < 100 && arm_motor_Right.getCurrentPosition() > -50 && arm_motor_Right.getCurrentPosition() < 100) {
+                    ACurrentMiniArmState = AMiniArmState.AHOVERING;
+                    ACurrentClawPivot = AClawPivotState.ARetractedPivot;
+                    if (timer.seconds() >= .3) {
 
-                        currentState = State.Claw_Close;
-                        Claw.setPosition(0.0);
+                        currentState = State.SlideRetract;
+
                         //sleep(500);
                         timer.reset();
                     }
                     break;
-                case Claw_Close:
+                case SlideRetract:
                     // Do nothing in IDLE
                     // currentState does not change once in IDLE
                     // This concludes the autonomous program
                    // timer.reset();
-                    if(timer.seconds() >= .2) {
-                        count++;
-                        currentState = State.Idle;
-                        timer.reset();
-                    }
+                   ACurrentSlideState = ASlideState.ARETRACTED;
+                   if(timer.seconds()>=.3){
+                       currentState = State.Idle;
+                       timer.reset();
+                   }
                     break;
                 case Idle:
                     // Check if the drive class is busy turning
                     // If not, move onto the next state, IDLE
                     // We are done with the program
-                    if (timer.seconds() >= .1){
-                        currentState = State.ARMUP_1;
-                    }
                     break;
             }
-            if(count == 6 && currentState.equals(State.Idle)){
-                ArmLeftServo.setPosition(.005);
-                ArmRightServo.setPosition(.005);
-                break;
-            }
+            robot.LeftSlide.setPower(ASlideControllerLeft.calculatePid(ACurrentSlideState.Aticks));
+            robot.RightSlide.setPower(ASlideControllerRight.calculatePid(ACurrentSlideState.Aticks));
+            robot.MiniArmLeft.setPosition(ACurrentMiniArmState.Aminiarmangle);
+            robot.MiniArmRight.setPosition(ACurrentMiniArmState.Aminiarmangle);
+            robot.ClawPivotLeft.setPosition(ACurrentClawPivot.AClawAngle);
+            robot.ClawPivotRight.setPosition(ACurrentClawPivot.AClawAngle);
             drive.update();
-            SlideController.setPID(pS, iS , dS);
-            int arm_pos_Left = (arm_motor_Left.getCurrentPosition());
-            int arm_pos_Right = (arm_motor_Right.getCurrentPosition());
-            double pidLeft = SlideController.calculate(arm_pos_Left, targetS);
-            // double pidRight = SlideController.calculate(arm_pos_Right, targetS);
-            double ff = Math.cos(Math.toRadians(targetS/ ticks_in_degreeS)) * fS; // might be the problem
+            telemetry.addData("SlidePosition", ACurrentSlideState);
+            telemetry.addData("Mini Arm Pos", ACurrentMiniArmState);
+            telemetry.addData("Claw Pivot", ACurrentClawPivot );
 
-            double powerLeft = pidLeft + ff;
-            double powerRight = pidLeft + ff;
 
-            arm_motor_Right.setPower(powerRight);
-            arm_motor_Left.setPower(powerLeft);
-            telemetry.addData("posLeft", arm_pos_Left);
-            telemetry.addData("posRight", arm_pos_Right);
-            telemetry.addData("target", targetS);
-            telemetry.addData("powerleft", powerLeft);
-            telemetry.addData("powerRight", powerRight);
-            // telemetry.update();
-            // telemetry.addData("servo target", servotarget);
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
 
 
             // Print pose to telemetry
-            telemetry.addData("Left Slide Postion", arm_motor_Left.getCurrentPosition());
-            telemetry.addData("Right Slide Postion", arm_motor_Right.getCurrentPosition());
+
 
             telemetry.update();
 
