@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Common.RobotHardware.ARobotHardware;
 import org.firstinspires.ftc.teamcode.Common.RobotHardware.RobotHardware;
 import org.firstinspires.ftc.teamcode.Common.SubSyststem.TeamElementSubsystem;
 import org.firstinspires.ftc.teamcode.Common.Tools.PIDCONTROLLERTOOL;
@@ -89,7 +90,7 @@ double time_bot_change =  .07;
         SlideRetract,
         Idle// Our bot will enter the IDLE state when done
     }
-    PurplePlusYellowBlueFar.State currentState = PurplePlusYellowBlueFar.State.Idle;
+    PurplePlusYellowBlueFar.State currentState = State.SPIKEPLACETRAJ;
     public enum ASlideState{
         ARETRACTED(0),
         AEXTEND1(300),
@@ -143,13 +144,14 @@ double time_bot_change =  .07;
 double count = 0;
 double downPos = 0;
         //Arm
-        RobotHardware robot = new RobotHardware(hardwareMap);
+        //RobotHardware robot = new RobotHardware(hardwareMap);
         //Claw//
       //  Servo Claw = hardwareMap.get(Servo.class, "claw");
         // Claw.setPosition(0.0);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        ARobotHardware robot = new ARobotHardware(hardwareMap);
+        drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Pose2d startPose = new Pose2d(-35 , 60, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
         // servo arm setup
@@ -166,6 +168,7 @@ double downPos = 0;
         // Let's define our trajectories
         Trajectory PurplePixelPlaceRight = drive.trajectoryBuilder(startPose)
                 .lineToConstantHeading(new Vector2d(-46.5,38))
+
                 .build();
 
         // Second trajectory
@@ -229,10 +232,19 @@ double downPos = 0;
         /*
          * The INIT-loop:
          * This REPLACES waitForStart!
-         */
+         */PIDCONTROLLERTOOL ASlideControllerLeft = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.LeftSlide);//TODO tune these values in the test file
+        PIDCONTROLLERTOOL ASlideControllerRight = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.RightSlide);//TODO tune these values in the test
         while (!isStarted() && !isStopRequested())
         {
+           // robot.Claw.setPosition(1);
 
+
+            robot.LeftSlide.setPower(ASlideControllerLeft.calculatePid(ACurrentSlideState.Aticks));
+            robot.RightSlide.setPower(ASlideControllerRight.calculatePid(ACurrentSlideState.Aticks));
+            robot.MiniArmLeft.setPosition(ACurrentMiniArmState.Aminiarmangle);
+            robot.MiniArmRight.setPosition(ACurrentMiniArmState.Aminiarmangle);
+            robot.ClawPivotLeft.setPosition(ACurrentClawPivot.AClawAngle);
+            robot.ClawPivotRight.setPosition(ACurrentClawPivot.AClawAngle);
         }
 
         /*
@@ -241,15 +253,11 @@ double downPos = 0;
          */
 
 
-        PIDCONTROLLERTOOL ASlideControllerLeft = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.LeftSlide);//TODO tune these values in the test file
-        PIDCONTROLLERTOOL ASlideControllerRight = new PIDCONTROLLERTOOL(.018,0,.00002,.0005,384.5/360,robot.RightSlide);//TODO tune these values in the test file
-        robot.LeftSlide.setPower(ASlideControllerLeft.calculatePid(ACurrentSlideState.Aticks));
-        robot.RightSlide.setPower(ASlideControllerRight.calculatePid(ACurrentSlideState.Aticks));
-        robot.MiniArmLeft.setPosition(ACurrentMiniArmState.Aminiarmangle);
-        robot.MiniArmRight.setPosition(ACurrentMiniArmState.Aminiarmangle);
-        robot.ClawPivotLeft.setPosition(ACurrentClawPivot.AClawAngle);
-        robot.ClawPivotRight.setPosition(ACurrentClawPivot.AClawAngle);
-        robot.Claw.setPosition(1);
+
+
+
+
+
 
         /* Update the telemetry */
 
@@ -267,11 +275,11 @@ double downPos = 0;
 
                 case SPIKEPLACETRAJ:
                     if(SelectedLocation == 1) {
-                        drive.followTrajectorySequenceAsync(PurplePlacePixelLeft);
+                        drive.followTrajectorySequence(PurplePlacePixelLeft);
                     } else if (SelectedLocation == 3) {
-                        drive.followTrajectoryAsync(PurplePixelPlaceRight);
+                        drive.followTrajectory(PurplePixelPlaceRight);
                     }else {
-                        drive.followTrajectorySequenceAsync(MiddlePurplePixelPlace);
+                        drive.followTrajectorySequence(MiddlePurplePixelPlace);
                     }
                     // Check if the drive class isn't busy
                     // `isBusy() == true` while it's following the trajectory
@@ -280,7 +288,7 @@ double downPos = 0;
                     // Make sure we use the async follow function
                     //timer.reset();
 
-                    if (timer.seconds() >= .35 ) {
+                    if (!drive.isBusy()) {
                         currentState = State.OUTAKESPIKE;
                         timer.reset();
                     }
@@ -291,8 +299,8 @@ double downPos = 0;
                     // Once `isBusy() == false`, the trajectory follower signals that it is finished
                     // We move on to the next state
                     // Make sure we use the async follow function
-                    //timer.reset();
-                    robot.Intake.setPower(-.5);
+                    // timer.reset();
+                  robot.Intake.setPower(.5);
                     if (timer.seconds() >= .35 ) {
                         currentState = State.BACKBOARDTRAJ;
                         timer.reset();
@@ -301,6 +309,7 @@ double downPos = 0;
                 case BACKBOARDTRAJ:
                     // Check if the drive class is busy following the trajectory
                     // Move on to the next state, TURN_1, once finished
+                    robot.Intake.setPower(0);
                     if(SelectedLocation == 1) {
                         drive.followTrajectorySequenceAsync(MoveToBoardLeft);
                     } else if (SelectedLocation == 3) {
@@ -308,7 +317,8 @@ double downPos = 0;
                     }else {
                         drive.followTrajectorySequenceAsync(MoveToBoardCenter);
                     }
-                    robot.Intake.setPower(0);
+                   // drive.update();
+                    //robot.Intake.setPower(0);
                     if(!drive.isBusy()){
                         currentState = State.ARMUP;
 
@@ -350,7 +360,7 @@ double downPos = 0;
                     // Check if the timer has exceeded the specified wait time
                     // If so, move on to the TURN_2 state
                     //timer.reset();
-                    robot.Claw.setPosition(0);
+                   // robot.Claw.setPosition(0);
                     if(timer.seconds() >= .3) {
 
 
@@ -390,17 +400,20 @@ double downPos = 0;
                     // We are done with the program
                     break;
             }
+
             robot.LeftSlide.setPower(ASlideControllerLeft.calculatePid(ACurrentSlideState.Aticks));
             robot.RightSlide.setPower(ASlideControllerRight.calculatePid(ACurrentSlideState.Aticks));
             robot.MiniArmLeft.setPosition(ACurrentMiniArmState.Aminiarmangle);
             robot.MiniArmRight.setPosition(ACurrentMiniArmState.Aminiarmangle);
             robot.ClawPivotLeft.setPosition(ACurrentClawPivot.AClawAngle);
             robot.ClawPivotRight.setPosition(ACurrentClawPivot.AClawAngle);
+
+
             drive.update();
             telemetry.addData("SlidePosition", ACurrentSlideState);
             telemetry.addData("Mini Arm Pos", ACurrentMiniArmState);
             telemetry.addData("Claw Pivot", ACurrentClawPivot );
-
+            telemetry.addData("selected Location", SelectedLocation);
 
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
@@ -412,40 +425,7 @@ double downPos = 0;
             telemetry.update();
 
         }
-        if(tagOfInterest == null){
 
-
-
-        }else if(tagOfInterest.id == LEFT){
-
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
-            drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkLeft = drive.trajectorySequenceBuilder(startPosePost)
-                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
-                    .lineToLinearHeading(new Pose2d(-10,-15.8, Math.toRadians(160)))
-                    .build();
-            drive.followTrajectorySequence(ParkLeft);
-
-        }else if(tagOfInterest.id == MIDDLE){
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
-            drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkMiddle = drive.trajectorySequenceBuilder(startPosePost)
-                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
-                    .lineToLinearHeading(new Pose2d(37,-15.8, Math.toRadians(160)))
-                    .build();
-            drive.followTrajectorySequence(ParkMiddle);
-        }else{
-            drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            Pose2d startPosePost = new Pose2d(52.1,-.2, Math.toRadians(152.5));
-            drive.setPoseEstimate(startPosePost);
-            TrajectorySequence ParkRight = drive.trajectorySequenceBuilder(startPosePost)
-                    .lineToLinearHeading(new Pose2d(52.1,-15.8, Math.toRadians(160)))
-                    .lineToLinearHeading(new Pose2d(60,-15.8, Math.toRadians(160)))
-                    .build();
-            drive.followTrajectorySequence(ParkRight);
-        }
 
         /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
         while (opModeIsActive()) {sleep(20);}
