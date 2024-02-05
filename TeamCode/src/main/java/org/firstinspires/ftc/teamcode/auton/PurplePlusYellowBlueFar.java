@@ -145,8 +145,8 @@ double downPos = 0;
         //Arm
         RobotHardware robot = new RobotHardware(hardwareMap);
         //Claw//
-        Servo Claw = hardwareMap.get(Servo.class, "claw");
-        Claw.setPosition(0.0);
+      //  Servo Claw = hardwareMap.get(Servo.class, "claw");
+        // Claw.setPosition(0.0);
         //traj setup
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
