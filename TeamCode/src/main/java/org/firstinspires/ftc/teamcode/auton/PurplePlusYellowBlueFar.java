@@ -275,11 +275,11 @@ double downPos = 0;
 
                 case SPIKEPLACETRAJ:
                     if(SelectedLocation == 1) {
-                        drive.followTrajectorySequence(PurplePlacePixelLeft);
+                        drive.followTrajectorySequenceAsync(PurplePlacePixelLeft);
                     } else if (SelectedLocation == 3) {
-                        drive.followTrajectory(PurplePixelPlaceRight);
+                        drive.followTrajectoryAsync(PurplePixelPlaceRight);
                     }else {
-                        drive.followTrajectorySequence(MiddlePurplePixelPlace);
+                        drive.followTrajectorySequenceAsync(MiddlePurplePixelPlace);
                     }
                     // Check if the drive class isn't busy
                     // `isBusy() == true` while it's following the trajectory
